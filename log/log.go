@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"lemon/app/service"
 	"log"
 	"os"
 	"runtime"
@@ -15,13 +14,14 @@ var errFile *os.File
 
 // Init 11
 func Init() {
-	var err error
-	errlog := service.GetConfig().GetString("log.error")
-	if errFile, err = os.OpenFile(errlog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666); err != nil {
-		log.Fatalln("打开日志文件失败：", err)
-	}
+	// var err error
+	// errlog := service.GetConfig().GetString("log.error")
+	// if errFile, err = os.OpenFile(errlog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666); err != nil {
+	// 	log.Fatalln("打开日志文件失败：", err)
+	// }
 
-	level := service.GetConfig().GetString("log.level")
+	// level := service.GetConfig().GetString("log.level")
+	level := "debug"
 
 	logger = logrus.New() //实例化
 	logger.Out = errFile  //设置输出
@@ -52,9 +52,9 @@ func Print(prefix string, err ...interface{}) {
 			"line": line,
 		})
 
-		if isPrint := service.GetConfig().GetBool("log.is_print"); isPrint {
-			Println(file, line, err)
-		}
+		// if isPrint := service.GetConfig().GetBool("log.is_print"); isPrint {
+		// 	Println(file, line, err)
+		// }
 
 		if prefix == "info" {
 			handle.Info(err)
