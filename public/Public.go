@@ -1,4 +1,4 @@
-package service
+package public
 
 import (
 	"errors"
