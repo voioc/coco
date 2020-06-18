@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"coco/config"
 	"log"
 	"os"
 	"runtime"
@@ -14,11 +15,11 @@ var errFile *os.File
 
 // Init 11
 func Init() {
-	// var err error
-	// errlog := service.GetConfig().GetString("log.error")
-	// if errFile, err = os.OpenFile(errlog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666); err != nil {
-	// 	log.Fatalln("打开日志文件失败：", err)
-	// }
+	var err error
+	errlog := config.GetConfig().GetString("log.error")
+	if errFile, err = os.OpenFile(errlog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666); err != nil {
+		log.Fatalln("打开日志文件失败：", err)
+	}
 
 	// level := service.GetConfig().GetString("log.level")
 	level := "debug"
