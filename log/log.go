@@ -1,11 +1,12 @@
 package lib
 
 import (
-	"coco/config"
 	"log"
 	"os"
 	"runtime"
 	"runtime/debug"
+
+	"../config"
 
 	"github.com/voioc/logrus"
 )
