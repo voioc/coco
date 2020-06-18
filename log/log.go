@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"runtime/debug"
 
-	"../config"
+	"./config"
 
 	"github.com/voioc/logrus"
 )
