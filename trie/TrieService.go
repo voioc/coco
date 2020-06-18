@@ -1,11 +1,3 @@
-/*
- * @Author: your name
- * @Date: 2020-04-02 15:06:27
- * @LastEditTime: 2020-04-07 16:11:50
- * @LastEditors: Please set LastEditors
- * @Description: In User Settings Edit
- * @FilePath: /Lemon/app/service/trie/TrieService.go
- */
 package trie
 
 import (

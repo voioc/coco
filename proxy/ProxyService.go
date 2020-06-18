@@ -5,16 +5,17 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"lemon/app/common"
-	"lemon/app/service"
-	"lemon/lib/cache"
-	log "lemon/lib/log"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/voioc/coco/cache"
+	"github.com/voioc/coco/common"
+	log "github.com/voioc/coco/log"
+	"github.com/voioc/coco/public"
 	// "github.com/bitly/go-simplejson"
 )
 
@@ -153,7 +154,7 @@ func (p *Proxy) SampleClient(urls string, method string, header map[string]strin
 		return httpRes
 	}
 
-	common.SetDebug(p.DebugPointer, fmt.Sprintf("HTTP Query Result{"+service.TimeCost(StartTime)+"} : status :%s, content length:%d, url:%s", resp.Status, resp.ContentLength, urls), 2)
+	common.SetDebug(p.DebugPointer, fmt.Sprintf("HTTP Query Result{"+public.TimeCost(StartTime)+"} : status :%s, content length:%d, url:%s", resp.Status, resp.ContentLength, urls), 2)
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)

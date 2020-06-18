@@ -2,14 +2,15 @@ package cache
 
 import (
 	"fmt"
-	"lemon/app/service"
-	log "lemon/lib/log"
+	// log "lemon/lib/log"
 	"time"
 
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/go-redis/redis"
 	jsoniter "github.com/json-iterator/go"
 	GoCache "github.com/patrickmn/go-cache"
+	"github.com/voioc/coco/config"
+	log "github.com/voioc/coco/log"
 )
 
 type CacheConfigSingle struct {
@@ -28,7 +29,7 @@ var redisClient *redis.Client
 var redisClusterClient *redis.ClusterClient
 
 func init() {
-	service.GetConfig().UnmarshalKey("cache", &cacheConfig)
+	config.GetConfig().UnmarshalKey("cache", &cacheConfig)
 
 	for _, cache := range cacheConfig {
 		if cache.Driver == "cache" {
