@@ -28,7 +28,7 @@ var memClient *memcache.Client
 var redisClient *redis.Client
 var redisClusterClient *redis.ClusterClient
 
-func init() {
+func Init() {
 	config.GetConfig().UnmarshalKey("cache", &cacheConfig)
 
 	for _, cache := range cacheConfig {

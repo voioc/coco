@@ -1,11 +1,3 @@
-/*
- * @Author: your name
- * @Date: 2020-04-01 16:11:05
- * @LastEditTime: 2020-04-10 13:28:13
- * @LastEditors: Please set LastEditors
- * @Description: In User Settings Edit
- * @FilePath: /Lemon/lib/RiotService.go
- */
 package riot
 
 import (

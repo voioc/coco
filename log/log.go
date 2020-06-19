@@ -22,8 +22,8 @@ func Init() {
 		log.Fatalln("打开日志文件失败：", err)
 	}
 
-	// level := service.GetConfig().GetString("log.level")
-	level := "debug"
+	level := config.GetConfig().GetString("log.level")
+	// level := "debug"
 
 	logger = logrus.New() //实例化
 	logger.Out = errFile  //设置输出
@@ -54,9 +54,9 @@ func Print(prefix string, err ...interface{}) {
 			"line": line,
 		})
 
-		// if isPrint := service.GetConfig().GetBool("log.is_print"); isPrint {
-		// 	Println(file, line, err)
-		// }
+		if isPrint := config.GetConfig().GetBool("log.is_print"); isPrint {
+			Println(file, line, err)
+		}
 
 		if prefix == "info" {
 			handle.Info(err)
