@@ -87,7 +87,7 @@ func GetRedis() interface{} {
 }
 
 // GetRedisCluster 获得redisCluster
-func GetRedisCluster() *redis.ClientCluster {
+func GetRedisCluster() *redis.ClusterClient {
 	return redisClusterClient
 }
 
