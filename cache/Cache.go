@@ -13,7 +13,7 @@ import (
 	log "github.com/voioc/coco/log"
 )
 
-type CacheConfigSingle struct {
+type cacheConfigSingle struct {
 	Driver   string   `json:"driver"`
 	Nodes    []string `json:"nodes"`
 	Password []string `json:"password"`
@@ -21,13 +21,29 @@ type CacheConfigSingle struct {
 	Flush    int32    `json:"flush"`
 }
 
-var cacheConfig []CacheConfigSingle
+// Redis 通用Redis类型
+type Redis interface {
+	Do(...interface{}) *redis.Cmd
+	Ping() *redis.StatusCmd
+	IncrBy(string, int64) *redis.IntCmd
+	Get(key string) *redis.StringCmd
+	Set(string, interface{}, time.Duration) *redis.StatusCmd
+	ZCard(string) *redis.IntCmd
+	ZScan(string, uint64, string, int64) *redis.ScanCmd
+	ZIncrBy(string, float64, string) *redis.FloatCmd
+	ZRevRangeByScoreWithScores(string, redis.ZRangeBy) *redis.ZSliceCmd
+}
 
+var cacheConfig []cacheConfigSingle
+
+var redisClient Redis
 var cacheClient *GoCache.Cache
 var memClient *memcache.Client
-var redisClient *redis.Client
-var redisClusterClient *redis.ClusterClient
 
+// var redisClient *redis.Client
+// var redisClusterClient *redis.ClusterClient
+
+// Init 初始化
 func Init() {
 	config.GetConfig().UnmarshalKey("cache", &cacheConfig)
 
@@ -57,41 +73,26 @@ func Init() {
 					Password: password, // no password set
 					DB:       0,        // use default DB
 				})
-
-				if ping, err := redisClient.Ping().Result(); err != nil {
-					log.Print("info", "Test Redis Server:"+ping+"the error is: "+err.Error())
-				}
 			} else {
-				redisClusterClient = redis.NewClusterClient(&redis.ClusterOptions{
+				redisClient = redis.NewClusterClient(&redis.ClusterOptions{
 					Addrs:    cache.Nodes,
 					Password: password,
 				})
-
-				if ping, err := redisClusterClient.Ping().Result(); err != nil {
-					log.Print("info", "Test Redis Server:"+ping+"the error is: "+err.Error())
-				}
 			}
 
-			// err := redisClient.Do("SET", "cache", cacheConfig, "EX", "300")
-			// fmt.Println(err)
+			if ping, err := redisClient.Ping().Result(); err != nil {
+				log.Print("info", "Test Redis Server:"+ping+"the error is: "+err.Error())
+			}
 		}
 	}
 }
 
 // GetRedis 获得redis
-func GetRedis() interface{} {
-	if redisClient == nil {
-		return redisClusterClient
-	}
+func GetRedis() Redis {
 	return redisClient
 }
 
-// GetRedisCluster 获得redisCluster
-func GetRedisCluster() *redis.ClusterClient {
-	return redisClusterClient
-}
-
-// GetCache sdfsdf
+// GetCache 获取缓存
 func GetCache(cacheKey string, data interface{}) (bool, error) {
 
 	isGet, cacheErr := getCacheByDriver(cacheKey, cacheConfig[0].Driver, data)
@@ -129,10 +130,9 @@ func getCacheByDriver(cacheKey, driver string, dataStruct interface{}) (bool, er
 		value = string(valueTmp.Value)
 
 	case "redis":
-		if redisClusterClient == nil {
-			value, err = redisClient.Do("GET", cacheKey).String()
-		} else {
-			value, err = redisClusterClient.Do("GET", cacheKey).String()
+		if value, err = redisClient.Do("GET", cacheKey).String(); err != nil {
+			log.Print("info", "Cache there is error when get value from key: "+cacheKey+" error is: "+err.Error())
+			return false, fmt.Errorf("[info] Cache there is error when get value from key %s : %s", cacheKey, err.Error())
 		}
 
 		if err != nil {
@@ -188,13 +188,7 @@ func setCacheByDriver(cacheKey, driver string, data interface{}, expire int32) e
 		}
 
 	case "redis":
-		var errCmd *redis.Cmd
-		if redisClusterClient == nil {
-			errCmd = redisClient.Do("SET", cacheKey, dataStr, "EX", expire)
-		} else {
-			errCmd = redisClusterClient.Do("SET", cacheKey, dataStr, "EX", expire)
-		}
-
+		errCmd := redisClient.Do("SET", cacheKey, dataStr, "EX", expire)
 		if errCmd.Err() != nil {
 			log.Print("info", "Cache Redis set cache:: "+errCmd.Err().Error())
 			return fmt.Errorf("[info] Cache Redis set cache: %s", errCmd.Err().Error())
