@@ -25,9 +25,11 @@ type cacheConfigSingle struct {
 type Redis interface {
 	Do(...interface{}) *redis.Cmd
 	Ping() *redis.StatusCmd
-	IncrBy(string, int64) *redis.IntCmd
 	Get(key string) *redis.StringCmd
 	Set(string, interface{}, time.Duration) *redis.StatusCmd
+	ExpireAt(string, time.Time) *redis.BoolCmd
+	IncrBy(string, int64) *redis.IntCmd
+
 	ZCard(string) *redis.IntCmd
 	ZScan(string, uint64, string, int64) *redis.ScanCmd
 	ZIncrBy(string, float64, string) *redis.FloatCmd
