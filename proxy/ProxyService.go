@@ -8,21 +8,21 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/voioc/coco/cache"
-	"github.com/voioc/coco/common"
 	log "github.com/voioc/coco/log"
 	"github.com/voioc/coco/public"
-	// "github.com/bitly/go-simplejson"
 )
 
-// var Cache = Cache.GetCache()
+// Proxy 类型
 type Proxy struct {
-	IsCache      bool
-	DebugPointer *[]string
+	IsCache bool
+	Debug   *[]string
 }
 
 func NewProxy() Proxy {
@@ -103,7 +103,7 @@ func (p *Proxy) SampleClient(urls string, method string, header map[string]strin
 				req.URL.RawQuery = q.Encode()
 			}
 
-			common.SetDebug(p.DebugPointer, fmt.Sprintf("Send HTTP Query: %s", urls+"?"+req.URL.RawQuery), 2)
+			p.SetDebug(fmt.Sprintf("Send HTTP Query: %s", urls+"?"+req.URL.RawQuery), 1)
 
 		} else if method == "POST" || method == "post" {
 			if post, ok := postdata.(map[string]string); ok {
@@ -122,7 +122,7 @@ func (p *Proxy) SampleClient(urls string, method string, header map[string]strin
 				log.Print("error", "CacheHTTP gen newRequest:", err.Error())
 			}
 			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-			common.SetDebug(p.DebugPointer, fmt.Sprintf("Send HTTP Query: %s", urls), 2)
+			p.SetDebug(fmt.Sprintf("Send HTTP Query: %s", urls), 1)
 		}
 	}
 
@@ -138,7 +138,7 @@ func (p *Proxy) SampleClient(urls string, method string, header map[string]strin
 	resp, err := client.Do(req)
 	if err != nil {
 		//不抛出错误而是接口降级
-		common.SetDebug(p.DebugPointer, fmt.Sprintf("HTTP Query Downgrade: %s", err.Error()), 2)
+		p.SetDebug(fmt.Sprintf("HTTP Query Downgrade: %s", err.Error()), 2)
 		log.Print("error", "CacheHTTP request:", err.Error())
 
 		return httpRes
@@ -146,7 +146,7 @@ func (p *Proxy) SampleClient(urls string, method string, header map[string]strin
 
 	if resp.StatusCode != 200 {
 		//不抛出错误而是接口降级
-		common.SetDebug(p.DebugPointer, fmt.Sprintf("HTTP Query Downgrade: non-200 StatusCode:%s", urls), 2)
+		p.SetDebug(fmt.Sprintf("HTTP Query Downgrade: non-200 StatusCode:%s", urls), 2)
 		log.Print("error", "CacheHTTP request got non-200 StatusCode:", urls)
 
 		httpRes.HttpStatus = resp.Status
@@ -154,7 +154,7 @@ func (p *Proxy) SampleClient(urls string, method string, header map[string]strin
 		return httpRes
 	}
 
-	common.SetDebug(p.DebugPointer, fmt.Sprintf("HTTP Query Result{"+public.TimeCost(StartTime)+"} : status :%s, content length:%d, url:%s", resp.Status, resp.ContentLength, urls), 2)
+	p.SetDebug(fmt.Sprintf("HTTP Query Result{"+public.TimeCost(StartTime)+"} : status :%s, content length:%d, url:%s", resp.Status, resp.ContentLength, urls), 1)
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -171,10 +171,7 @@ func (p *Proxy) SampleClient(urls string, method string, header map[string]strin
 	return httpRes
 }
 
-/*
-* 支持多http请求并缓存，全局请求只使用同一个map channel，并将并发中的多个相同请求归并到同一个channel和responsedata
-* 因为channel问题目前不暂时不支持将并发中的多个相同请求归并到同一个channel和responsedata
- */
+// MultipleClient 并行处理
 func (p *Proxy) MultipleClient(ch []HttpModel) []Result {
 	go allocate(ch)
 	done := make(chan []Result)
@@ -206,7 +203,7 @@ func (p *Proxy) httpQuery(request HttpModel) []byte {
 		} else {
 			//记录log和设置debuginfo
 			log.Print("error", fmt.Sprintf("[error]CacheHTTP get cache:%s", err.Error()))
-			common.SetDebug(p.DebugPointer, fmt.Sprintf("Cache Miss: %s", cache_key), 2)
+			p.SetDebug(fmt.Sprintf("Cache Miss: %s", cache_key), 1)
 		}
 	}
 
@@ -246,9 +243,23 @@ func (p *Proxy) result(done chan []Result) {
 			if err := cache.SetCache(cache_key, result.Data, 600); err != nil {
 				log.Print("error", fmt.Sprintf("[error]CacheHTTP set cache:%s", err.Error()))
 			}
-			common.SetDebug(p.DebugPointer, fmt.Sprintf("Cache Set: %s", cache_key), 2)
+			p.SetDebug(fmt.Sprintf("Cache Set: %s", cache_key), 1)
 		}
 		tmp = append(tmp, result)
 	}
 	done <- tmp
+}
+
+// SetDebug 写入debug信息
+func (p *Proxy) SetDebug(str string, depth int) {
+	if p.Debug != nil {
+		if depth == 0 {
+			depth = 1
+		}
+
+		_, file, line, _ := runtime.Caller(depth)
+		path := strings.LastIndexByte(file, '/')
+		tmp := string([]byte(file)[path+1:]) + "(line " + strconv.Itoa(line) + "): " + str
+		*p.Debug = append(*p.Debug, tmp)
+	}
 }

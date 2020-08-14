@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math"
 	"math/big"
 	"net"
 	"os"
@@ -16,53 +15,6 @@ import (
 	"sync"
 	"time"
 )
-
-func stringToIntArray(input string) []int {
-	output := []int{}
-	for _, v := range input {
-		output = append(output, int(v))
-	}
-	for i, j := 0, len(output)-1; i < j; i, j = i+1, j-1 {
-		output[i], output[j] = output[j], output[i]
-	}
-	return output
-}
-
-func getInput(input string) <-chan int {
-	out := make(chan int)
-	go func() {
-		for _, b := range stringToIntArray(input) {
-			out <- b
-		}
-		close(out)
-	}()
-
-	return out
-}
-
-func sq(in <-chan int) <-chan int {
-	out := make(chan int)
-
-	var base, i float64 = 2, 0
-	go func() {
-		for n := range in {
-			out <- (n - 48) * int(math.Pow(base, i))
-			i++
-		}
-		close(out)
-	}()
-	return out
-}
-
-func Bindec(input string) int {
-	c := getInput(input)
-	out := sq(c)
-	sum := 0
-	for o := range out {
-		sum += o
-	}
-	return sum
-}
 
 func InSlice(obj interface{}, target []string) bool {
 	for _, val := range target {
