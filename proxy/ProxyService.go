@@ -154,7 +154,7 @@ func (p *ProxyClient) SampleClient(urls string, method string, header map[string
 		return httpRes
 	}
 
-	p.SetDebug(fmt.Sprintf("HTTP Query Result{"+public.TimeCost(StartTime)+"} : status: %s, content length: %d, url: %s", resp.Status, resp.ContentLength, req.URL.RawQuery), 1)
+	p.SetDebug(fmt.Sprintf("HTTP Query Result{"+public.TimeCost(StartTime)+"} : status: %s, content length: %d, url: %s", resp.Status, resp.ContentLength, urls+"?"+req.URL.RawQuery), 1)
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -162,7 +162,7 @@ func (p *ProxyClient) SampleClient(urls string, method string, header map[string
 		log.Print("panic", "CacheHTTP read response:"+err.Error())
 	}
 
-	httpRes.URL = req.URL.RawQuery
+	httpRes.URL = urls + "?" + req.URL.RawQuery
 	httpRes.HttpStatus = resp.Status
 	httpRes.HttpStatusCode = resp.StatusCode
 	httpRes.ContentLength = resp.ContentLength
