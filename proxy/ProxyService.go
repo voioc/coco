@@ -19,14 +19,14 @@ import (
 	"github.com/voioc/coco/public"
 )
 
-// Proxy 类型
-type Proxy struct {
+// ProxyClient 类型
+type ProxyClient struct {
 	IsCache bool
 	Debug   *[]string
 }
 
-func NewProxy() Proxy {
-	return Proxy{}
+func NewProxy() ProxyClient {
+	return ProxyClient{}
 }
 
 //定义并初始化客户端变量
