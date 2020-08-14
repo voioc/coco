@@ -85,7 +85,7 @@ type Result struct {
 }
 
 // SampleClient 简单请求
-func (p *Proxy) SampleClient(urls string, method string, header map[string]string, postdata interface{}) *HttpResponse {
+func (p *ProxyClient) SampleClient(urls string, method string, header map[string]string, postdata interface{}) *HttpResponse {
 	StartTime := time.Now()
 	var pbody io.Reader
 	req, err := http.NewRequest(method, urls, nil)
@@ -103,7 +103,7 @@ func (p *Proxy) SampleClient(urls string, method string, header map[string]strin
 				req.URL.RawQuery = q.Encode()
 			}
 
-			p.SetDebug(fmt.Sprintf("Send HTTP Query: %s", urls+"?"+req.URL.RawQuery), 1)
+			// p.SetDebug(fmt.Sprintf("Send HTTP Query: %s", urls+"?"+req.URL.RawQuery), 1)
 
 		} else if method == "POST" || method == "post" {
 			if post, ok := postdata.(map[string]string); ok {
@@ -154,7 +154,7 @@ func (p *Proxy) SampleClient(urls string, method string, header map[string]strin
 		return httpRes
 	}
 
-	p.SetDebug(fmt.Sprintf("HTTP Query Result{"+public.TimeCost(StartTime)+"} : status :%s, content length:%d, url:%s", resp.Status, resp.ContentLength, urls), 1)
+	p.SetDebug(fmt.Sprintf("HTTP Query Result{"+public.TimeCost(StartTime)+"} : status: %s, content length: %d, url: %s", resp.Status, resp.ContentLength, req.URL.RawQuery), 1)
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -162,7 +162,7 @@ func (p *Proxy) SampleClient(urls string, method string, header map[string]strin
 		log.Print("panic", "CacheHTTP read response:"+err.Error())
 	}
 
-	httpRes.URL = urls
+	httpRes.URL = req.URL.RawQuery
 	httpRes.HttpStatus = resp.Status
 	httpRes.HttpStatusCode = resp.StatusCode
 	httpRes.ContentLength = resp.ContentLength
@@ -172,7 +172,7 @@ func (p *Proxy) SampleClient(urls string, method string, header map[string]strin
 }
 
 // MultipleClient 并行处理
-func (p *Proxy) MultipleClient(ch []HttpModel) []Result {
+func (p *ProxyClient) MultipleClient(ch []HttpModel) []Result {
 	go allocate(ch)
 	done := make(chan []Result)
 	go p.result(done)
@@ -186,7 +186,7 @@ func (p *Proxy) MultipleClient(ch []HttpModel) []Result {
 var jobs = make(chan HttpModel, 10)
 var results = make(chan Result, 10)
 
-func (p *Proxy) worker(wg *sync.WaitGroup) {
+func (p *ProxyClient) worker(wg *sync.WaitGroup) {
 	for job := range jobs {
 		output := Result{job, p.httpQuery(job)}
 		results <- output
@@ -194,7 +194,7 @@ func (p *Proxy) worker(wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-func (p *Proxy) httpQuery(request HttpModel) []byte {
+func (p *ProxyClient) httpQuery(request HttpModel) []byte {
 	cache_key := "HTTP_" + request.HTTPUniqid
 	var retdata []byte
 	if request.NeedCache {
@@ -212,7 +212,7 @@ func (p *Proxy) httpQuery(request HttpModel) []byte {
 }
 
 //分配协程池
-func (p *Proxy) createWorkerPool(MountOfWorkers int) {
+func (p *ProxyClient) createWorkerPool(MountOfWorkers int) {
 	var wg sync.WaitGroup
 	for i := 0; i < MountOfWorkers; i++ {
 		wg.Add(1)
@@ -235,7 +235,7 @@ func allocate(HttpModels []HttpModel) {
 /*
  * 读取返回结果
  */
-func (p *Proxy) result(done chan []Result) {
+func (p *ProxyClient) result(done chan []Result) {
 	var tmp = []Result{}
 	for result := range results {
 		if result.Job.NeedCache {
@@ -251,7 +251,7 @@ func (p *Proxy) result(done chan []Result) {
 }
 
 // SetDebug 写入debug信息
-func (p *Proxy) SetDebug(str string, depth int) {
+func (p *ProxyClient) SetDebug(str string, depth int) {
 	if p.Debug != nil {
 		if depth == 0 {
 			depth = 1
