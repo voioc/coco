@@ -64,21 +64,17 @@ func Init() {
 		}
 
 		if cache.Driver == "redis" {
-			password := ""
-			if len(cache.Nodes) == len(cache.Password) {
-				password = cache.Password[0]
-			}
 
 			if len(cache.Nodes) == 1 {
 				redisClient = redis.NewClient(&redis.Options{
 					Addr:     cache.Nodes[0],
-					Password: password, // no password set
-					DB:       0,        // use default DB
+					Password: cache.Password, // no password set
+					DB:       0,              // use default DB
 				})
 			} else {
 				redisClient = redis.NewClusterClient(&redis.ClusterOptions{
 					Addrs:    cache.Nodes,
-					Password: password,
+					Password: cache.Password,
 				})
 			}
 
