@@ -16,7 +16,7 @@ import (
 type cacheConfigSingle struct {
 	Driver   string   `json:"driver"`
 	Nodes    []string `json:"nodes"`
-	Password []string `json:"password"`
+	Password string   `json:"password"`
 	Expire   int32    `json:"exire"`
 	Flush    int32    `json:"flush"`
 }
@@ -64,7 +64,6 @@ func Init() {
 		}
 
 		if cache.Driver == "redis" {
-
 			if len(cache.Nodes) == 1 {
 				redisClient = redis.NewClient(&redis.Options{
 					Addr:     cache.Nodes[0],
