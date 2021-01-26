@@ -17,7 +17,8 @@ var errFile *os.File
 // Init 11
 func Init() {
 	var err error
-	errlog := config.GetConfig().GetString("log.error")
+	errlog := config.GetConfig().GetString("log.error") // error log file
+	// el := config.GetConfig().GetString("log.level") // error log level
 	if errFile, err = os.OpenFile(errlog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666); err != nil {
 		log.Fatalln("打开日志文件失败：", err)
 	}
@@ -40,6 +41,10 @@ func Init() {
 	})
 
 	// Logger = log.New(errorFile, "[Info]", log.Ldate|log.Ltime)
+}
+
+func GetLogger() *logrus.Logger {
+	return logger
 }
 
 // Print 记录日志
