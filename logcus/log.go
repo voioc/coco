@@ -1,118 +1,122 @@
+/*
+ * @Description: Do not edit
+ * @Author: Jianxuesong
+ * @Date: 2021-05-13 15:27:17
+ * @LastEditors: Jianxuesong
+ * @LastEditTime: 2021-05-14 11:18:30
+ * @FilePath: /Coco/logcus/log.go
+ */
 package logcus
 
 import (
+	"io"
 	"log"
 	"os"
 	"runtime"
 	"runtime/debug"
 
+	nested "github.com/antonfisher/nested-logrus-formatter"
+	"github.com/sirupsen/logrus"
 	"github.com/voioc/coco/config"
-
-	"github.com/voioc/logrus"
 )
 
-var logger *logrus.Logger
+var logger *logrus.Entry
 var errFile *os.File
 
+// func init() {
+// 	// loggerConfig := logger.NewLogConfig()
+// 	// loggerConfig.LogPath = conf.GetAppConfig().Log.Error
+// 	// loggerConfig.Console = false
+// 	// loggerConfig.Rotate = false
+// 	// loggerConfig.Level = "DEBUG"
+// 	// logger.InitLogWithConfig(loggerConfig)
+// 	logrus.SetReportCaller(true)
+// }
+
 // Init 11
-func Init() {
+func init() {
 	var err error
-	errlog := config.GetConfig().GetString("log.error") // error log file
-	// el := config.GetConfig().GetString("log.level") // error log level
+	errlog := config.GetConfig().GetString("log.error_log")
 	if errFile, err = os.OpenFile(errlog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666); err != nil {
 		log.Fatalln("打开日志文件失败：", err)
 	}
+	stdout := os.Stdout
 
-	level := config.GetConfig().GetString("log.level")
-	// level := "debug"
-
-	logger = logrus.New() //实例化
-	logger.Out = errFile  //设置输出
-
-	// 设置日志级别
-	logger.SetLevel(logrus.ErrorLevel)
-	if level == "info" {
-		logger.SetLevel(logrus.InfoLevel)
-	}
+	log := logrus.New() //实例化
+	// logrus.SetReportCaller(true)
+	// logger.SetLevel(logrus.DebugLevel)
+	log.SetOutput(io.MultiWriter(errFile, stdout))
 
 	//设置日志格式
-	logger.SetFormatter(&logrus.TextFormatter{
+	// log.SetFormatter(&logrus.TextFormatter{
+	// 	TimestampFormat: "2006/01/02 15:04:05",
+	// })
+
+	log.SetFormatter(&nested.Formatter{
+		// HideKeys:        true,
 		TimestampFormat: "2006/01/02 15:04:05",
+		FieldsOrder:     []string{"name", "age"},
 	})
 
-	// Logger = log.New(errorFile, "[Info]", log.Ldate|log.Ltime)
+	_, file, line, _ := runtime.Caller(1)
+	logger = logger.WithFields(logrus.Fields{
+		"file": file,
+		"line": line,
+	})
 }
 
-func GetLogger() *logrus.Logger {
+func GetLogger() *logrus.Entry {
 	return logger
 }
 
-// Print 记录日志
-func Print(prefix string, err ...interface{}) {
-	_, file, line, _ := runtime.Caller(1)
-	// Logger.SetPrefix("[" + prefix + "]")
-	// Logger.Println(file, line, err)
-
+func OutputInfo(message ...interface{}) {
 	if logger != nil {
-		handle := logger.WithFields(logrus.Fields{
-			"file": file,
-			"line": line,
-		})
-
-		if isPrint := config.GetConfig().GetBool("log.is_print"); isPrint {
-			Println(file, line, err)
-		}
-
-		if prefix == "info" {
-			handle.Info(err)
-		} else if prefix == "error" {
-			handle.Error(err)
-		} else if prefix == "panic" {
-			handle.Panic(err)
-		}
+		logger.Info(message)
 	}
-
 }
 
+func OutputError(message ...interface{}) {
+	if logger != nil {
+		logger.Error(message)
+	}
+}
+
+func OutputPanic(message ...interface{}) {
+	if logger != nil {
+		logger.Error(message)
+	}
+}
+
+// // Print 记录日志
+// func Print(prefix string, err ...interface{}) {
+
+// 	if logger != nil {
+// 		handle := logger.WithFields(logrus.Fields{
+// 			"file": file,
+// 			"line": line,
+// 		})
+
+// 		if isPrint := config.GetConfig().GetBool("log.is_print"); isPrint {
+// 			Println(file, line, err)
+// 		}
+
+// 		if prefix == "info" {
+// 			handle.Info(err)
+// 		} else if prefix == "error" {
+// 			handle.Error(err)
+// 		} else if prefix == "panic" {
+// 			handle.Panic(err)
+// 		}
+// 	}
+// }
+
 // Panic 收集panic
-func Panic() {
+func RecoverPanic() {
 	// lg := log.New(errlog, "[panic]: ", log.Ldate|log.Ltime|log.Llongfile)
 	if info := recover(); info != nil {
 		panic := debug.Stack()
-
-		if len(panic) > 0 {
-			_, file, line, _ := runtime.Caller(2)
-
-			if logger != nil {
-				logger.WithFields(logrus.Fields{
-					"file": file,
-					"line": line,
-				}).Panic(string(panic[:]))
-			}
-			// Logger.SetPrefix("[panic] ")
-			// Logger.Println(file, line, string(panic[:]))
-
-			// WriteLog("panic", string(panic[:]))
+		if len(panic) > 0 && logger != nil {
+			logger.Panic(string(panic))
 		}
 	}
-}
-
-// Fatalln 继承
-func Fatalln(v ...interface{}) {
-	log.Fatalln(v)
-}
-
-// Println 继承
-func Println(v ...interface{}) {
-	log.Println(v)
-}
-
-// Printf 继承
-func Printf(format string, v ...interface{}) {
-	log.Printf(format, v)
-}
-
-// Defer 函数
-func Defer() {
-	errFile.Close()
 }

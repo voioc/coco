@@ -8,15 +8,11 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"runtime"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/voioc/coco/cache"
-	log "github.com/voioc/coco/log"
-	"github.com/voioc/coco/public"
+	"github.com/voioc/coco/logcus"
 )
 
 // ProxyClient 类型
@@ -84,17 +80,16 @@ type Result struct {
 	Data []byte
 }
 
-// SampleClient 简单请求
-func (p *ProxyClient) SampleClient(urls string, method string, header map[string]string, postdata interface{}) *HttpResponse {
-	StartTime := time.Now()
+func SampleClient(urls string, method string, header map[string]string, postdata interface{}) *HttpResponse {
+	// Service.Flagtime("1")
 	var pbody io.Reader
 	req, err := http.NewRequest(method, urls, nil)
 	if err != nil {
-		log.Print("error", "CacheHTTP gen newRequest:", err.Error())
+		logcus.OutputError("CacheHTTP gen newRequest:" + err.Error())
 	}
 
 	if postdata != nil {
-		if method == "GET" || method == "get" {
+		if strings.ToUpper(method) == "GET" {
 			if post, ok := postdata.(map[string]string); ok {
 				q := req.URL.Query()
 				for k, v := range post {
@@ -103,10 +98,9 @@ func (p *ProxyClient) SampleClient(urls string, method string, header map[string
 				req.URL.RawQuery = q.Encode()
 			}
 
-			urls += "?" + req.URL.RawQuery
-			// p.SetDebug(fmt.Sprintf("Send HTTP Query: %s", urls+"?"+req.URL.RawQuery), 1)
+			// Common.SetDebug(fmt.Sprintf("Send HTTP Query: %s", urls+"?"+req.URL.RawQuery), 2)
 
-		} else if method == "POST" || method == "post" {
+		} else if strings.ToUpper(method) == "POST" {
 			if post, ok := postdata.(map[string]string); ok {
 				data := make(url.Values)
 				for k, v := range post {
@@ -120,10 +114,10 @@ func (p *ProxyClient) SampleClient(urls string, method string, header map[string
 			}
 
 			if req, err = http.NewRequest(method, urls, pbody); err != nil {
-				log.Print("error", "CacheHTTP gen newRequest:", err.Error())
+				logcus.OutputError("CacheHTTP gen newRequest:" + err.Error())
 			}
-			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-			p.SetDebug(fmt.Sprintf("Send HTTP Query: %s", urls), 1)
+			// req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			// Common.SetDebug(fmt.Sprintf("Send HTTP Query: %s", urls), 2)
 		}
 	}
 
@@ -138,29 +132,29 @@ func (p *ProxyClient) SampleClient(urls string, method string, header map[string
 	client := getClinet()
 	resp, err := client.Do(req)
 	if err != nil {
+		fmt.Println(err.Error())
 		//不抛出错误而是接口降级
-		p.SetDebug(fmt.Sprintf("HTTP Query Downgrade: %s", err.Error()), 2)
-		log.Print("error", "CacheHTTP request:", err.Error())
+		// Common.SetDebug(fmt.Sprintf("HTTP Query Downgrade: %s", err.Error()), 2)
+		logcus.OutputError("CacheHTTP request error: " + err.Error())
 
 		return httpRes
 	}
-
 	if resp.StatusCode != 200 {
 		//不抛出错误而是接口降级
-		p.SetDebug(fmt.Sprintf("HTTP Query Downgrade: non-200 StatusCode:%s", urls), 2)
-		log.Print("error", "CacheHTTP request got non-200 StatusCode:", urls)
+		// Common.SetDebug(fmt.Sprintf("HTTP Query Downgrade: non-200 StatusCode:%s", urls), 2)
+		logcus.OutputError("CacheHTTP request got non-200 StatusCode: " + urls)
 
 		httpRes.HttpStatus = resp.Status
 		httpRes.HttpStatusCode = resp.StatusCode
 		return httpRes
 	}
 
-	p.SetDebug(fmt.Sprintf("HTTP Query Result{"+public.TimeCost(StartTime)+"} : status: %s, content length: %d, url: %s", resp.Status, resp.ContentLength, urls), 1)
+	// Common.SetDebug(fmt.Sprintf("HTTP Query Result{"+Service.Flagtime("1")+"} : status :%s, content length:%d, url:%s", resp.Status, resp.ContentLength, urls), 2)
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Print("panic", "CacheHTTP read response:"+err.Error())
+		logcus.OutputError("CacheHTTP read response error: " + err.Error())
 	}
 
 	httpRes.URL = urls
@@ -172,95 +166,91 @@ func (p *ProxyClient) SampleClient(urls string, method string, header map[string
 	return httpRes
 }
 
-// MultipleClient 并行处理
-func (p *ProxyClient) MultipleClient(ch []HttpModel) []Result {
-	go allocate(ch)
+// Multiple
+type Multiple struct {
+	jobs    chan HttpModel
+	results chan Result
+}
+
+// NewMultiple 111
+func NewMultiple() *Multiple {
+	return &Multiple{jobs: make(chan HttpModel, 10), results: make(chan Result, 100)}
+}
+
+/*
+* 支持多http请求并缓存，全局请求只使用同一个map channel，并将并发中的多个相同请求归并到同一个channel和responsedata
+* 因为channel问题目前不暂时不支持将并发中的多个相同请求归并到同一个channel和responsedata
+**/
+func (m *Multiple) MultipleClient(ch []HttpModel) []Result {
+	go m.allocate(ch)
 	done := make(chan []Result)
-	go p.result(done)
+	go m.result(done)
 	noOfWorkers := 10
-	p.createWorkerPool(noOfWorkers)
+	m.createWorkerPool(noOfWorkers)
 	data := <-done
 
 	return data
 }
 
-var jobs = make(chan HttpModel, 10)
-var results = make(chan Result, 10)
-
-func (p *ProxyClient) worker(wg *sync.WaitGroup) {
-	for job := range jobs {
-		output := Result{job, p.httpQuery(job)}
-		results <- output
+func (m *Multiple) worker(wg *sync.WaitGroup) {
+	for job := range m.jobs {
+		output := Result{job, m.httpQuery(job)}
+		m.results <- output
 	}
 	wg.Done()
 }
 
-func (p *ProxyClient) httpQuery(request HttpModel) []byte {
-	cache_key := "HTTP_" + request.HTTPUniqid
-	var retdata []byte
-	if request.NeedCache {
-		if bool, err := cache.GetCache(cache_key, retdata); bool == true && err == nil {
-			return retdata
-		} else {
-			//记录log和设置debuginfo
-			log.Print("error", fmt.Sprintf("[error]CacheHTTP get cache:%s", err.Error()))
-			p.SetDebug(fmt.Sprintf("Cache Miss: %s", cache_key), 1)
-		}
-	}
-
-	tmp := p.SampleClient(request.URL, request.Method, request.Header, request.Postdata)
+func (m *Multiple) httpQuery(request HttpModel) []byte {
+	// cache_key := "HTTP_" + request.HTTPUniqid
+	// var retdata []byte
+	// if request.NeedCache {
+	// 	if bool, err := Cache.GetCache(cache_key, retdata); bool == true && err == nil {
+	// 		return retdata
+	// 	} else {
+	// 		//记录log和设置debuginfo
+	// 		lib.WriteLog("error", fmt.Sprintf("[error]CacheHTTP get cache:%s", err.Error()))
+	// 		// Common.SetDebug(fmt.Sprintf("Cache Miss: %s", cache_key), 2)
+	// 	}
+	// }
+	tmp := SampleClient(request.URL, request.Method, request.Header, request.Postdata)
 	return tmp.Body
 }
 
 //分配协程池
-func (p *ProxyClient) createWorkerPool(MountOfWorkers int) {
+func (m *Multiple) createWorkerPool(MountOfWorkers int) {
 	var wg sync.WaitGroup
 	for i := 0; i < MountOfWorkers; i++ {
 		wg.Add(1)
-		go p.worker(&wg)
+		go m.worker(&wg)
 	}
 	wg.Wait()
-	close(results)
+	close(m.results)
 }
 
 /*
  * 创建任务并加入到协程池中
  */
-func allocate(HttpModels []HttpModel) {
+func (m *Multiple) allocate(HttpModels []HttpModel) {
 	for _, row := range HttpModels {
-		jobs <- row
+		m.jobs <- row
 	}
-	close(jobs)
+	close(m.jobs)
 }
 
 /*
  * 读取返回结果
  */
-func (p *ProxyClient) result(done chan []Result) {
+func (m *Multiple) result(done chan []Result) {
 	var tmp = []Result{}
-	for result := range results {
-		if result.Job.NeedCache {
-			cache_key := "HTTP_" + result.Job.HTTPUniqid
-			if err := cache.SetCache(cache_key, result.Data, 600); err != nil {
-				log.Print("error", fmt.Sprintf("[error]CacheHTTP set cache:%s", err.Error()))
-			}
-			p.SetDebug(fmt.Sprintf("Cache Set: %s", cache_key), 1)
-		}
+	for result := range m.results {
+		// if result.Job.NeedCache {
+		// 	cache_key := "HTTP_" + result.Job.HTTPUniqid
+		// 	if err := Cache.SetCache(cache_key, result.Data, 600); err != nil {
+		// 		lib.WriteLog("error", fmt.Sprintf("[error]CacheHTTP set cache:%s", err.Error()))
+		// 	}
+		// 	// Common.SetDebug(fmt.Sprintf("Cache Set: %s", cache_key), 2)
+		// }
 		tmp = append(tmp, result)
 	}
 	done <- tmp
-}
-
-// SetDebug 写入debug信息
-func (p *ProxyClient) SetDebug(str string, depth int) {
-	if p.Debug != nil {
-		if depth == 0 {
-			depth = 1
-		}
-
-		_, file, line, _ := runtime.Caller(depth)
-		path := strings.LastIndexByte(file, '/')
-		tmp := string([]byte(file)[path+1:]) + "(line " + strconv.Itoa(line) + "): " + str
-		*p.Debug = append(*p.Debug, tmp)
-	}
 }
