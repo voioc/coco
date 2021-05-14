@@ -1,0 +1,69 @@
+/*
+ * @Description: Do not edit
+ * @Author: Jianxuesong
+ * @Date: 2021-05-14 14:34:46
+ * @LastEditors: Jianxuesong
+ * @LastEditTime: 2021-05-14 14:55:25
+ * @FilePath: /Coco/db/mysql.go
+ */
+
+package db
+
+import (
+	"fmt"
+	"log"
+	"os"
+	"sync"
+
+	"github.com/go-xorm/xorm"
+	"github.com/voioc/coco/config"
+	"github.com/voioc/coco/logcus"
+)
+
+var engine *xorm.Engine
+
+//var onceMysql sync.Once
+var lockMysql sync.Mutex
+
+func init() {
+	mysqlConn()
+}
+
+func GetMySQL() *xorm.Engine {
+	if engine == nil {
+		mysqlConn()
+	}
+
+	return engine
+}
+
+func mysqlConn() {
+	lockMysql.Lock()
+	defer lockMysql.Unlock()
+
+	// driverName := config.GetConfig().GetString("db.dsn")
+	dataSourceName := config.GetConfig().GetString("db.mysql.dsn")
+	if dataSourceName == "" {
+		logcus.OutputError("Mysql config is empty.")
+		os.Exit(504)
+	}
+
+	engine, err := xorm.NewEngine("mysql", dataSourceName)
+	if err != nil {
+		logcus.OutputError(fmt.Sprintf("Connect mysql error: %s", err.Error()))
+		os.Exit(504)
+	}
+
+	engine.SetMaxIdleConns(10)
+	engine.SetMaxOpenConns(100)
+
+	sl := config.GetConfig().GetString("db.mysql.sql_log")
+	sqlLog, err := os.OpenFile(sl, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalln("打开日志文件失败：", err)
+	} else {
+		engine.ShowSQL(true)
+		engine.SetLogger(xorm.NewSimpleLogger(sqlLog))
+	}
+
+}
