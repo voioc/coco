@@ -14,6 +14,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 func InSlice(obj interface{}, target []string) bool {
@@ -139,7 +141,7 @@ func TrimHTML(src string) string {
 }
 
 // FilePutContents 写入文件信息
-func FilePutContents(file string, content interface{}) {
+func FilePutContents(file string, content interface{}, isShowTime bool) {
 	f, _ := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 
 	c := ""
@@ -147,6 +149,11 @@ func FilePutContents(file string, content interface{}) {
 		c = string(v)
 	} else if v, ok := content.(string); ok {
 		c = v
+	}
+
+	if isShowTime {
+		now := "[" + time.Now().Local().Format("2006-01-02 15:04:05") + "] "
+		c = now + c
 	}
 
 	f.WriteString(c + "\n")
@@ -169,4 +176,23 @@ func ChangeNumber(f float64, m int) string {
 	}
 
 	return newn[0] + "." + newn[1][:m]
+}
+
+func FormatError(msg, err string, debug interface{}) string {
+	errInfo := map[string]interface{}{
+		"msg":   msg,
+		"debug": debug,
+		"error": err,
+	}
+
+	str, _ := jsoniter.MarshalToString(errInfo)
+
+	return FormatJson(str)
+}
+
+func FormatJson(text string) string {
+	newText := strings.ReplaceAll(text, "\"{", "{")
+	newText = strings.ReplaceAll(newText, "}\"", "}")
+	newText = strings.ReplaceAll(newText, "\\", "")
+	return newText
 }

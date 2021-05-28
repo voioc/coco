@@ -3,7 +3,7 @@
  * @Author: Jianxuesong
  * @Date: 2021-05-14 14:34:46
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-05-14 14:55:25
+ * @LastEditTime: 2021-05-26 16:51:48
  * @FilePath: /Coco/db/mysql.go
  */
 
@@ -15,12 +15,13 @@ import (
 	"os"
 	"sync"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/xorm"
 	"github.com/voioc/coco/config"
 	"github.com/voioc/coco/logcus"
 )
 
-var engine *xorm.Engine
+var engine *xorm.EngineGroup
 
 //var onceMysql sync.Once
 var lockMysql sync.Mutex
@@ -29,7 +30,7 @@ func init() {
 	mysqlConn()
 }
 
-func GetMySQL() *xorm.Engine {
+func GetMySQL() *xorm.EngineGroup {
 	if engine == nil {
 		mysqlConn()
 	}
@@ -48,7 +49,7 @@ func mysqlConn() {
 		os.Exit(504)
 	}
 
-	engine, err := xorm.NewEngine("mysql", dataSourceName)
+	engine, err := xorm.NewEngineGroup("mysql", dataSourceName)
 	if err != nil {
 		logcus.OutputError(fmt.Sprintf("Connect mysql error: %s", err.Error()))
 		os.Exit(504)
