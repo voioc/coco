@@ -3,17 +3,19 @@
  * @Author: Jianxuesong
  * @Date: 2021-05-13 15:27:17
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-05-14 11:18:30
+ * @LastEditTime: 2021-05-29 21:08:38
  * @FilePath: /Coco/logcus/log.go
  */
 package logcus
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
 	"runtime"
 	"runtime/debug"
+	"time"
 
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/sirupsen/logrus"
@@ -35,6 +37,18 @@ var errFile *os.File
 
 // Init 11
 func init() {
+	until := time.Now().Add(5 * time.Second)
+	AppConfig := config.GetConfig()
+	for AppConfig == nil {
+		if time.Now().After(until) {
+			break
+		}
+
+		fmt.Println("config not init, sleep...")
+		time.Sleep(time.Second)
+		// _, err = os.Stat(filePath)
+	}
+
 	var err error
 	errlog := config.GetConfig().GetString("log.error_log")
 	if errFile, err = os.OpenFile(errlog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666); err != nil {
