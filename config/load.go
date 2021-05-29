@@ -2,7 +2,7 @@
  * @Author: Cedar
  * @Date: 2020-06-17 17:50:50
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-05-14 14:14:40
+ * @LastEditTime: 2021-05-29 21:27:17
  * @FilePath: /Coco/config/load.go
  */
 package config
@@ -39,7 +39,7 @@ func init() {
 
 	path, _ := filepath.Abs(filepath.Dir(""))
 	// config := path[0:strings.LastIndex(path, "/")] + "/config/config_debug.json"
-	config := path + "/config/config_debug.json"
+	config := path + "/config/config_dev.toml"
 
 	versionFlag := flag.Bool("v", false, "print the version")
 	configFile := flag.String("c", config, "配置文件路径")
