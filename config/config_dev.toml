@@ -1,0 +1,21 @@
+[app]
+    env = "dev"
+
+[log]
+    access = "/tmp/access.log"
+    error_log  = "/tmp/melon.log"
+
+[db]
+    driver = "mysql"
+    dsn = [
+        "root:123456@tcp(127.0.0.1:3306)/cmf_video?charset=utf8&loc=Local",
+    ]
+    log = "/tmp/sql.log"
+
+[[cache]]
+    driver =  "redis"
+    nodes = ["127.0.0.1:6379"]
+    password = ""
+    expire= 300
+    flush=300
+    
