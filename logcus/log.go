@@ -3,7 +3,7 @@
  * @Author: Jianxuesong
  * @Date: 2021-05-13 15:27:17
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-05-30 11:41:33
+ * @LastEditTime: 2021-05-30 12:22:41
  * @FilePath: /Coco/logcus/log.go
  */
 package logcus
@@ -66,7 +66,7 @@ func init() {
 	// })
 
 	log.SetFormatter(&nested.Formatter{
-		// HideKeys:        true,
+		HideKeys:        true,
 		TimestampFormat: "2006/01/02 15:04:05",
 		FieldsOrder:     []string{"name", "age"},
 	})
