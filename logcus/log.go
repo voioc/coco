@@ -3,7 +3,7 @@
  * @Author: Jianxuesong
  * @Date: 2021-05-13 15:27:17
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-05-30 12:22:41
+ * @LastEditTime: 2021-05-30 19:07:59
  * @FilePath: /Coco/logcus/log.go
  */
 package logcus
@@ -45,20 +45,22 @@ func init() {
 
 		fmt.Println("config not init, sleep...")
 		time.Sleep(time.Second)
-		// _, err = os.Stat(filePath)
 	}
 
+	InitLog()
+}
+
+func InitLog() *logrus.Logger {
 	var err error
 	errlog := config.GetConfig().GetString("log.error_log")
 	if errFile, err = os.OpenFile(errlog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666); err != nil {
 		log.Fatalln("打开日志文件失败：", err)
 	}
-	stdout := os.Stdout
 
-	log := logrus.New() //实例化
+	log = logrus.New() //实例化
 	// logrus.SetReportCaller(true)
 	// logger.SetLevel(logrus.DebugLevel)
-	log.SetOutput(io.MultiWriter(errFile, stdout))
+	log.SetOutput(io.MultiWriter(errFile, os.Stdout))
 
 	//设置日志格式
 	// log.SetFormatter(&logrus.TextFormatter{
@@ -71,11 +73,7 @@ func init() {
 		FieldsOrder:     []string{"name", "age"},
 	})
 
-	// _, file, line, _ := runtime.Caller(2)
-	// logger = log.WithFields(logrus.Fields{
-	// 	"file": file,
-	// 	"line": line,
-	// })
+	return log
 }
 
 func GetLogger() *logrus.Logger {
@@ -83,22 +81,30 @@ func GetLogger() *logrus.Logger {
 }
 
 func OutputInfo(message ...interface{}) {
+	if log == nil {
+		InitLog()
+	}
+
 	if log != nil {
-		_, file, line, _ := runtime.Caller(2)
+		_, file, line, _ := runtime.Caller(1)
 		logger := log.WithFields(logrus.Fields{
-			"file": file,
-			"line": line,
+			"file - line": fmt.Sprintf("%s:%d", file, line),
+			// "line": line,
 		})
 		logger.Info(message)
 	}
 }
 
 func OutputError(message ...interface{}) {
+	if log == nil {
+		InitLog()
+	}
+
 	if log != nil {
-		_, file, line, _ := runtime.Caller(2)
+		_, file, line, _ := runtime.Caller(1)
 		logger := log.WithFields(logrus.Fields{
-			"file": file,
-			"line": line,
+			"file - line": fmt.Sprintf("%s, %d", file, line),
+			// "line": line,
 		})
 		logger.Error(message)
 	}
