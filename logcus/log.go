@@ -3,7 +3,7 @@
  * @Author: Jianxuesong
  * @Date: 2021-05-13 15:27:17
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-05-30 10:34:36
+ * @LastEditTime: 2021-05-30 11:41:33
  * @FilePath: /Coco/logcus/log.go
  */
 package logcus
@@ -11,7 +11,6 @@ package logcus
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"runtime"
 	"runtime/debug"
@@ -22,7 +21,7 @@ import (
 	"github.com/voioc/coco/config"
 )
 
-var logger *logrus.Entry
+var log *logrus.Logger
 var errFile *os.File
 
 // func init() {
@@ -72,32 +71,48 @@ func init() {
 		FieldsOrder:     []string{"name", "age"},
 	})
 
-	_, file, line, _ := runtime.Caller(2)
-	logger = log.WithFields(logrus.Fields{
-		"file": file,
-		"line": line,
-	})
+	// _, file, line, _ := runtime.Caller(2)
+	// logger = log.WithFields(logrus.Fields{
+	// 	"file": file,
+	// 	"line": line,
+	// })
 }
 
-func GetLogger() *logrus.Entry {
-	return logger
+func GetLogger() *logrus.Logger {
+	return log
 }
 
 func OutputInfo(message ...interface{}) {
-	if logger != nil {
+	if log != nil {
+		_, file, line, _ := runtime.Caller(2)
+		logger := log.WithFields(logrus.Fields{
+			"file": file,
+			"line": line,
+		})
 		logger.Info(message)
 	}
 }
 
 func OutputError(message ...interface{}) {
-	if logger != nil {
+	if log != nil {
+		_, file, line, _ := runtime.Caller(2)
+		logger := log.WithFields(logrus.Fields{
+			"file": file,
+			"line": line,
+		})
 		logger.Error(message)
 	}
 }
 
 func OutputPanic(message ...interface{}) {
-	if logger != nil {
-		logger.Error(message)
+	if log != nil {
+		_, file, line, _ := runtime.Caller(2)
+		logger := log.WithFields(logrus.Fields{
+			"file": file,
+			"line": line,
+		})
+
+		logger.Panic(message)
 	}
 }
 
@@ -129,8 +144,8 @@ func RecoverPanic() {
 	// lg := log.New(errlog, "[panic]: ", log.Ldate|log.Ltime|log.Llongfile)
 	if info := recover(); info != nil {
 		panic := debug.Stack()
-		if len(panic) > 0 && logger != nil {
-			logger.Panic(string(panic))
+		if len(panic) > 0 && log != nil {
+			log.Panic(string(panic))
 		}
 	}
 }
