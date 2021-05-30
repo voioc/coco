@@ -3,7 +3,7 @@
  * @Author: Jianxuesong
  * @Date: 2021-05-14 14:34:46
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-05-30 16:22:40
+ * @LastEditTime: 2021-05-30 17:12:09
  * @FilePath: /Coco/db/mysql.go
  */
 
@@ -56,28 +56,27 @@ func mysqlConn() {
 	defer lockMysql.Unlock()
 
 	// driverName := config.GetConfig().GetString("db.dsn")
-	dataSourceName := config.GetConfig().GetString("db.mysql.dsn")
-	if dataSourceName == "" {
+	dataSourceName := config.GetConfig().GetStringSlice("db.dsn")
+	if len(dataSourceName) == 0 || dataSourceName[0] == "" {
 		logcus.OutputError("Mysql config is empty.")
 		os.Exit(504)
 	}
 
-	engine, err := xorm.NewEngineGroup("mysql", dataSourceName)
+	var err error
+	engine, err = xorm.NewEngineGroup("mysql", dataSourceName)
 	if err != nil {
 		logcus.OutputError(fmt.Sprintf("Connect mysql error: %s", err.Error()))
 		os.Exit(504)
 	}
-
 	engine.SetMaxIdleConns(10)
 	engine.SetMaxOpenConns(100)
 
-	sl := config.GetConfig().GetString("db.mysql.sql_log")
+	sl := config.GetConfig().GetString("db.log")
 	sqlLog, err := os.OpenFile(sl, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		log.Fatalln("打开日志文件失败：", err)
+		log.Fatalln("打开数据库日志文件失败：", err)
 	} else {
 		engine.ShowSQL(true)
 		engine.SetLogger(xorm.NewSimpleLogger(sqlLog))
 	}
-
 }
