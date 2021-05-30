@@ -3,7 +3,7 @@
  * @Author: Jianxuesong
  * @Date: 2021-05-13 15:27:17
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-05-30 09:48:42
+ * @LastEditTime: 2021-05-30 10:34:36
  * @FilePath: /Coco/logcus/log.go
  */
 package logcus
@@ -72,7 +72,7 @@ func init() {
 		FieldsOrder:     []string{"name", "age"},
 	})
 
-	_, file, line, _ := runtime.Caller(1)
+	_, file, line, _ := runtime.Caller(2)
 	logger = log.WithFields(logrus.Fields{
 		"file": file,
 		"line": line,
