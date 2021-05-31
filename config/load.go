@@ -2,7 +2,7 @@
  * @Author: Cedar
  * @Date: 2020-06-17 17:50:50
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-05-29 21:27:17
+ * @LastEditTime: 2021-05-31 19:52:19
  * @FilePath: /Coco/config/load.go
  */
 package config
@@ -13,6 +13,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
@@ -33,8 +34,16 @@ var once sync.Once
 var config *viper.Viper
 
 func init() {
-	if RunEnv == "" {
+	env := os.Getenv("RunEnv")
+	env = strings.ToLower(env)
+
+	switch env {
+	case "test":
 		RunEnv = "test"
+	case "release":
+		RunEnv = "release"
+	default: //dev and other
+		RunEnv = "dev"
 	}
 
 	path, _ := filepath.Abs(filepath.Dir(""))
@@ -55,6 +64,7 @@ func init() {
 
 	//  configfile := build.GetConfigFile()
 	viper.SetConfigFile(*configFile)
+	fmt.Println("Loading config file " + *configFile)
 
 	once.Do(func() {
 		if err := viper.ReadInConfig(); err != nil {
