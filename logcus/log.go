@@ -3,7 +3,7 @@
  * @Author: Jianxuesong
  * @Date: 2021-05-13 15:27:17
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-05-30 19:07:59
+ * @LastEditTime: 2021-05-31 19:58:43
  * @FilePath: /Coco/logcus/log.go
  */
 package logcus
@@ -103,7 +103,7 @@ func OutputError(message ...interface{}) {
 	if log != nil {
 		_, file, line, _ := runtime.Caller(1)
 		logger := log.WithFields(logrus.Fields{
-			"file - line": fmt.Sprintf("%s, %d", file, line),
+			"file - line": fmt.Sprintf("%s:%d", file, line),
 			// "line": line,
 		})
 		logger.Error(message)
