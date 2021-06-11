@@ -3,7 +3,7 @@
  * @Author: Jianxuesong
  * @Date: 2021-05-13 15:27:17
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-06-11 11:17:57
+ * @LastEditTime: 2021-06-11 18:53:32
  * @FilePath: /Coco/logcus/log.go
  */
 package logcus
@@ -70,7 +70,8 @@ func InitLog() *logrus.Logger {
 	log.SetFormatter(&nested.Formatter{
 		HideKeys:        true,
 		TimestampFormat: "2006/01/02 15:04:05",
-		FieldsOrder:     []string{"name", "age"},
+		// FieldsOrder:     []string{"name", "age"},
+		ShowFullLevel: true,
 	})
 
 	return log
