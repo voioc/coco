@@ -12,17 +12,17 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/voioc/coco/logcus"
 )
 
 // ProxyClient 类型
 type ProxyClient struct {
-	IsCache bool
-	Debug   *[]string
+	C *gin.Context
 }
 
-func NewProxy() ProxyClient {
-	return ProxyClient{}
+func NewProxy(c *gin.Context) ProxyClient {
+	return ProxyClient{C: c}
 }
 
 //定义并初始化客户端变量
