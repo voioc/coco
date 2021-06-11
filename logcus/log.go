@@ -3,7 +3,7 @@
  * @Author: Jianxuesong
  * @Date: 2021-05-13 15:27:17
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-05-31 19:58:43
+ * @LastEditTime: 2021-06-11 11:17:57
  * @FilePath: /Coco/logcus/log.go
  */
 package logcus
@@ -80,7 +80,7 @@ func GetLogger() *logrus.Logger {
 	return log
 }
 
-func OutputInfo(message ...interface{}) {
+func OutputInfo(message string, a ...interface{}) {
 	if log == nil {
 		InitLog()
 	}
@@ -91,11 +91,11 @@ func OutputInfo(message ...interface{}) {
 			"file - line": fmt.Sprintf("%s:%d", file, line),
 			// "line": line,
 		})
-		logger.Info(message)
+		logger.Info(fmt.Sprintf(message, a...))
 	}
 }
 
-func OutputError(message ...interface{}) {
+func OutputError(message string, a ...interface{}) {
 	if log == nil {
 		InitLog()
 	}
@@ -106,7 +106,7 @@ func OutputError(message ...interface{}) {
 			"file - line": fmt.Sprintf("%s:%d", file, line),
 			// "line": line,
 		})
-		logger.Error(message)
+		logger.Error(fmt.Sprintf(message, a...))
 	}
 }
 
