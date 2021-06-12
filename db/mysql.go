@@ -3,7 +3,7 @@
  * @Author: Jianxuesong
  * @Date: 2021-05-14 14:34:46
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-05-30 17:12:09
+ * @LastEditTime: 2021-06-12 16:07:26
  * @FilePath: /Coco/db/mysql.go
  */
 
@@ -17,9 +17,9 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/go-xorm/xorm"
 	"github.com/voioc/coco/config"
 	"github.com/voioc/coco/logcus"
+	"xorm.io/xorm"
 )
 
 var engine *xorm.EngineGroup
