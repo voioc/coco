@@ -3,7 +3,7 @@
  * @Author: Jianxuesong
  * @Date: 2021-05-14 14:34:46
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-06-12 16:07:26
+ * @LastEditTime: 2021-06-12 16:24:37
  * @FilePath: /Coco/db/mysql.go
  */
 
@@ -77,6 +77,6 @@ func mysqlConn() {
 		log.Fatalln("打开数据库日志文件失败：", err)
 	} else {
 		engine.ShowSQL(true)
-		engine.SetLogger(xorm.NewSimpleLogger(sqlLog))
+		engine.SetLogger(sqlLog)
 	}
 }
