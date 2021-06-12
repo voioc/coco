@@ -2,7 +2,7 @@
  * @Author: Cedar
  * @Date: 2020-06-17 17:50:50
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-06-12 18:41:36
+ * @LastEditTime: 2021-06-12 18:48:38
  * @FilePath: /Coco/config/load.go
  */
 package config
@@ -24,7 +24,7 @@ var (
 	// Version should be updated by hand at each release
 	RunEnv      string
 	ProjectPath string
-	Version     string
+	AppVersion  string
 	GitCommit   string
 	BuildTime   string
 	GoVersion   string
@@ -47,7 +47,6 @@ func init() {
 	}
 
 	path, _ := filepath.Abs(filepath.Dir(""))
-	// config := path[0:strings.LastIndex(path, "/")] + "/config/config_debug.json"
 	config := path + "/config/config_" + RunEnv + ".toml"
 
 	versionFlag := flag.Bool("vc", false, "print the version")
@@ -55,7 +54,7 @@ func init() {
 	flag.Parse()
 
 	if *versionFlag {
-		fmt.Printf("App Version: %s \n", Version)
+		fmt.Printf("App Version: %s \n", AppVersion)
 		fmt.Printf("Git Commit: %s \n", GitCommit)
 		fmt.Printf("Build Time: %s \n", BuildTime)
 		fmt.Printf("Go Version: %s \n", GoVersion)
