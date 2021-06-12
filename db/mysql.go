@@ -3,7 +3,7 @@
  * @Author: Jianxuesong
  * @Date: 2021-05-14 14:34:46
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-06-12 16:24:37
+ * @LastEditTime: 2021-06-12 16:59:43
  * @FilePath: /Coco/db/mysql.go
  */
 
@@ -11,7 +11,6 @@ package db
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"sync"
 	"time"
@@ -20,6 +19,7 @@ import (
 	"github.com/voioc/coco/config"
 	"github.com/voioc/coco/logcus"
 	"xorm.io/xorm"
+	"xorm.io/xorm/log"
 )
 
 var engine *xorm.EngineGroup
@@ -65,7 +65,7 @@ func mysqlConn() {
 	var err error
 	engine, err = xorm.NewEngineGroup("mysql", dataSourceName)
 	if err != nil {
-		logcus.OutputError(fmt.Sprintf("Connect mysql error: %s", err.Error()))
+		logcus.GetLogger().Fatalln(fmt.Sprintf("Connect mysql error: %s", err.Error()))
 		os.Exit(504)
 	}
 	engine.SetMaxIdleConns(10)
@@ -74,9 +74,9 @@ func mysqlConn() {
 	sl := config.GetConfig().GetString("db.log")
 	sqlLog, err := os.OpenFile(sl, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		log.Fatalln("打开数据库日志文件失败：", err)
+		logcus.GetLogger().Fatalln("打开数据库日志文件失败：", err)
 	} else {
 		engine.ShowSQL(true)
-		engine.SetLogger(sqlLog)
+		engine.SetLogger(log.NewSimpleLogger(sqlLog))
 	}
 }
