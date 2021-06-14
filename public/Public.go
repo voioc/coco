@@ -196,3 +196,16 @@ func FormatJson(text string) string {
 	newText = strings.ReplaceAll(newText, "\\", "")
 	return newText
 }
+
+func RuneToString(data string) string {
+	result := ""
+	for _, row := range data {
+		if result == "" {
+			result = strconv.Itoa(int(row))
+		} else {
+			result += "_" + strconv.Itoa(int(row))
+		}
+	}
+
+	return result
+}
