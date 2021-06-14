@@ -3,7 +3,7 @@
 
 [log]
     access = "/tmp/access.log"
-    error_log  = "/tmp/melon.log"
+    error  = "/tmp/melon.log"
 
 [db]
     driver = "mysql"
