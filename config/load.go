@@ -2,7 +2,7 @@
  * @Author: Cedar
  * @Date: 2020-06-17 17:50:50
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-06-12 18:48:38
+ * @LastEditTime: 2021-06-14 15:56:06
  * @FilePath: /Coco/config/load.go
  */
 package config
@@ -49,7 +49,7 @@ func init() {
 	path, _ := filepath.Abs(filepath.Dir(""))
 	config := path + "/config/config_" + RunEnv + ".toml"
 
-	versionFlag := flag.Bool("vc", false, "print the version")
+	versionFlag := flag.Bool("v", false, "print the version")
 	configFile := flag.String("c", config, "配置文件路径")
 	flag.Parse()
 
