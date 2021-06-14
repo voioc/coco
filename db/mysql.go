@@ -3,7 +3,7 @@
  * @Author: Jianxuesong
  * @Date: 2021-05-14 14:34:46
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-06-12 16:59:43
+ * @LastEditTime: 2021-06-14 18:14:08
  * @FilePath: /Coco/db/mysql.go
  */
 
@@ -19,7 +19,6 @@ import (
 	"github.com/voioc/coco/config"
 	"github.com/voioc/coco/logcus"
 	"xorm.io/xorm"
-	"xorm.io/xorm/log"
 )
 
 var engine *xorm.EngineGroup
@@ -71,12 +70,12 @@ func mysqlConn() {
 	engine.SetMaxIdleConns(10)
 	engine.SetMaxOpenConns(100)
 
-	sl := config.GetConfig().GetString("db.log")
-	sqlLog, err := os.OpenFile(sl, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		logcus.GetLogger().Fatalln("打开数据库日志文件失败：", err)
-	} else {
-		engine.ShowSQL(true)
-		engine.SetLogger(log.NewSimpleLogger(sqlLog))
-	}
+	// sl := config.GetConfig().GetString("db.log")
+	// sqlLog, err := os.OpenFile(sl, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	// if err != nil {
+	// 	logcus.GetLogger().Fatalln("打开数据库日志文件失败：", err)
+	// } else {
+	// 	engine.ShowSQL(true)
+	// 	engine.SetLogger(log.NewSimpleLogger(sqlLog))
+	// }
 }
