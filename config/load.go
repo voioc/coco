@@ -2,7 +2,7 @@
  * @Author: Cedar
  * @Date: 2020-06-17 17:50:50
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-06-14 15:56:06
+ * @LastEditTime: 2021-06-14 18:04:07
  * @FilePath: /Coco/config/load.go
  */
 package config
@@ -38,12 +38,12 @@ func init() {
 	env = strings.ToLower(env)
 
 	switch env {
-	case "test":
-		RunEnv = "test"
+	case "dev":
+		RunEnv = "dev"
 	case "release":
 		RunEnv = "release"
-	default: //dev and other
-		RunEnv = "dev"
+	default: // other
+		RunEnv = "debug"
 	}
 
 	path, _ := filepath.Abs(filepath.Dir(""))
