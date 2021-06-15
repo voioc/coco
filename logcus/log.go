@@ -3,7 +3,7 @@
  * @Author: Jianxuesong
  * @Date: 2021-05-13 15:27:17
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-06-14 20:48:11
+ * @LastEditTime: 2021-06-15 15:31:43
  * @FilePath: /Coco/logcus/log.go
  */
 package logcus
@@ -53,6 +53,7 @@ func init() {
 func InitLog() *logrus.Logger {
 	var err error
 	errlog := config.GetConfig().GetString("log.error")
+	fmt.Println("error log path:", errlog)
 	if errFile, err = os.OpenFile(errlog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666); err != nil {
 		log.Fatalln("打开日志文件失败：", err)
 	}
