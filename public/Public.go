@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
@@ -34,7 +33,7 @@ func IP2Long(ip string) (int, error) {
 	flag := net.ParseIP(ip).To4()
 
 	if flag == nil {
-		return 0, errors.New("The ip is illegal")
+		return 0, errors.New("the ip is illegal")
 	}
 
 	ret.SetBytes(flag)
@@ -52,24 +51,23 @@ func Long2IP(ip int64) net.IP {
 	return net.IPv4(tmp[3], tmp[2], tmp[1], tmp[0])
 }
 
-var cost map[string]int64
-var rw sync.RWMutex
+var cost map[string]time.Time
+
+// var rw sync.RWMutex
 
 func Flagtime(flag string) string {
-
 	if cost == nil {
-		cost = map[string]int64{}
+		cost = map[string]time.Time{}
 	}
 
 	if _, ok := cost[flag]; !ok {
-		cost[flag] = time.Now().UnixNano()
+		cost[flag] = time.Now()
 	}
 
-	diff := time.Now().UnixNano() - cost[flag]
-	ms := strconv.FormatFloat(float64(diff)/1000000, 'f', 3, 64)
+	tc := time.Since(cost[flag])
 	delete(cost, flag)
 
-	return string([]byte(ms)[0:6]) + "ms"
+	return fmt.Sprintf("%vms", tc)
 }
 
 func TimeCost(start time.Time) string {
@@ -123,19 +121,19 @@ func GetRoot() string {
 // TrimHTML 清除html标签
 func TrimHTML(src string) string {
 	//将HTML标签全转换成小写
-	re, _ := regexp.Compile("\\<[\\S\\s]+?\\>")
+	re, _ := regexp.Compile(`\\<[\\S\\s]+?\\>`)
 	src = re.ReplaceAllStringFunc(src, strings.ToLower)
 	//去除STYLE
-	re, _ = regexp.Compile("\\<style[\\S\\s]+?\\</style\\>")
+	re, _ = regexp.Compile(`\\<style[\\S\\s]+?\\</style\\>`)
 	src = re.ReplaceAllString(src, "")
 	//去除SCRIPT
-	re, _ = regexp.Compile("\\<script[\\S\\s]+?\\</script\\>")
+	re, _ = regexp.Compile(`\\<script[\\S\\s]+?\\</script\\>`)
 	src = re.ReplaceAllString(src, "")
 	//去除所有尖括号内的HTML代码，并换成换行符
-	re, _ = regexp.Compile("\\<[\\S\\s]+?\\>")
+	re, _ = regexp.Compile(`\\<[\\S\\s]+?\\>`)
 	src = re.ReplaceAllString(src, "\n")
 	//去除连续的换行符
-	re, _ = regexp.Compile("\\s{2,}")
+	re, _ = regexp.Compile(`\\s{2,}`)
 	src = re.ReplaceAllString(src, "\n")
 	return strings.TrimSpace(src)
 }
