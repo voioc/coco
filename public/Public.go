@@ -7,6 +7,7 @@ import (
 	"log"
 	"math/big"
 	"net"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -206,4 +207,14 @@ func RuneToString(data string) string {
 	}
 
 	return result
+}
+
+func UrlEncode(params map[string]string) string {
+	encode := url.Values{}
+	for k, v := range params {
+		encode.Add(k, v)
+	}
+	//   params.Add("name", "中国")
+	//   params.Add("phone", "+8613000000000")
+	return encode.Encode()
 }
