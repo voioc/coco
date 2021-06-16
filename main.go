@@ -3,7 +3,7 @@
  * @Author: Jianxuesong
  * @Date: 2021-05-13 16:15:11
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-06-11 18:54:49
+ * @LastEditTime: 2021-06-16 14:06:37
  * @FilePath: /Coco/main.go
  */
 package main
@@ -32,7 +32,7 @@ func main() {
 	// logrus.SetOutput(io.MultiWriter(file, stdout))
 
 	// logrus.WithField("component", "main").Error("sdf")
-	logcus.OutputInfo("abcdejf")
+	logcus.Info("abcdejf")
 	// logrus.Trace("trace msg")
 	// logrus.Debug("debug msg")
 	// logrus.Info("info msg")
