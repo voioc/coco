@@ -3,7 +3,7 @@
  * @Author: Jianxuesong
  * @Date: 2021-05-13 15:27:17
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-06-15 15:31:43
+ * @LastEditTime: 2021-06-16 11:33:44
  * @FilePath: /Coco/logcus/log.go
  */
 package logcus
@@ -82,7 +82,7 @@ func GetLogger() *logrus.Logger {
 	return log
 }
 
-func OutputInfo(message string, a ...interface{}) {
+func Info(message string, a ...interface{}) {
 	if log == nil {
 		InitLog()
 	}
@@ -97,7 +97,7 @@ func OutputInfo(message string, a ...interface{}) {
 	}
 }
 
-func OutputError(message string, a ...interface{}) {
+func Error(message string, a ...interface{}) {
 	if log == nil {
 		InitLog()
 	}
@@ -112,7 +112,22 @@ func OutputError(message string, a ...interface{}) {
 	}
 }
 
-func OutputPanic(message ...interface{}) {
+func Fatalln(message string, a ...interface{}) {
+	if log == nil {
+		InitLog()
+	}
+
+	if log != nil {
+		_, file, line, _ := runtime.Caller(1)
+		logger := log.WithFields(logrus.Fields{
+			"file - line": fmt.Sprintf("%s:%d", file, line),
+			// "line": line,
+		})
+		logger.Fatalln(fmt.Sprintf(message, a...))
+	}
+}
+
+func Panic(message string, a ...interface{}) {
 	if log != nil {
 		_, file, line, _ := runtime.Caller(2)
 		logger := log.WithFields(logrus.Fields{
@@ -120,7 +135,7 @@ func OutputPanic(message ...interface{}) {
 			"line": line,
 		})
 
-		logger.Panic(message)
+		logger.Panic(fmt.Sprintf(message, a...))
 	}
 }
 
