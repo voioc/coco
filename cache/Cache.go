@@ -56,7 +56,7 @@ func CacheConn(driver string) {
 				})
 
 				if ping, err := Redis.Ping().Result(); err != nil {
-					logcus.OutputError("info", "Test Redis Server:"+ping+"the error is: "+err.Error())
+					logcus.Error("info", "Test Redis Server:"+ping+"the error is: "+err.Error())
 				}
 			}
 		}

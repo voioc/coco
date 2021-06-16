@@ -88,7 +88,7 @@ func SampleClient(urls string, method string, header map[string]string, postdata
 	var pbody io.Reader
 	req, err := http.NewRequest(method, urls, nil)
 	if err != nil {
-		logcus.OutputError("CacheHTTP gen newRequest:" + err.Error())
+		logcus.Error("CacheHTTP gen newRequest:" + err.Error())
 	}
 
 	if postdata != nil {
@@ -117,7 +117,7 @@ func SampleClient(urls string, method string, header map[string]string, postdata
 			}
 
 			if req, err = http.NewRequest(method, urls, pbody); err != nil {
-				logcus.OutputError("CacheHTTP gen newRequest:" + err.Error())
+				logcus.Error("CacheHTTP gen newRequest:" + err.Error())
 			}
 			// req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			// Common.SetDebug(fmt.Sprintf("Send HTTP Query: %s", urls), 2)
@@ -138,14 +138,14 @@ func SampleClient(urls string, method string, header map[string]string, postdata
 		fmt.Println(err.Error())
 		//不抛出错误而是接口降级
 		// Common.SetDebug(fmt.Sprintf("HTTP Query Downgrade: %s", err.Error()), 2)
-		logcus.OutputError("CacheHTTP request error: " + err.Error())
+		logcus.Error("CacheHTTP request error: " + err.Error())
 
 		return httpRes
 	}
 	if resp.StatusCode != 200 {
 		//不抛出错误而是接口降级
 		// Common.SetDebug(fmt.Sprintf("HTTP Query Downgrade: non-200 StatusCode:%s", urls), 2)
-		logcus.OutputError("CacheHTTP request got non-200 StatusCode: " + urls)
+		logcus.Error("CacheHTTP request got non-200 StatusCode: " + urls)
 
 		httpRes.HttpStatus = resp.Status
 		httpRes.HttpStatusCode = resp.StatusCode
@@ -157,7 +157,7 @@ func SampleClient(urls string, method string, header map[string]string, postdata
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		logcus.OutputError("CacheHTTP read response error: " + err.Error())
+		logcus.Error("CacheHTTP read response error: " + err.Error())
 	}
 
 	httpRes.URL = urls

@@ -3,8 +3,8 @@
  * @Author: Jianxuesong
  * @Date: 2021-05-29 19:25:04
  * @LastEditors: Jianxuesong
- * @LastEditTime: 2021-05-30 16:24:31
- * @FilePath: /Coco/cache/Redis.go
+ * @LastEditTime: 2021-06-16 11:35:20
+ * @FilePath: /Coco/cache/redis/Redis.go
  */
 package redis
 
@@ -51,7 +51,7 @@ func init() {
 	// path := conf.RedisIniPath
 	err := connect(cacheConfig)
 	if err != nil {
-		logcus.OutputError("初始化redis数据异常:" + err.Error())
+		logcus.Error("初始化redis数据异常:" + err.Error())
 	}
 }
 
@@ -75,7 +75,7 @@ func connect(cacheConfig []cacheConfigSingle) error {
 	for _, conf := range cacheConfig {
 		if conf.Driver == "redis" {
 			if len(conf.Nodes) < 1 {
-				logcus.OutputError("没有可用的redis")
+				logcus.Error("没有可用的redis")
 				return errors.New("no useful redis address")
 			}
 
@@ -83,7 +83,7 @@ func connect(cacheConfig []cacheConfigSingle) error {
 			for _, host := range conf.Nodes {
 				tempStrs := strings.Split(host, ":") //ip:port  冒号分隔
 				if len(tempStrs) < 2 {
-					logcus.OutputError("配置文件host格式有误 ，正确格式如 ip:port ，" + host)
+					logcus.Error("配置文件host格式有误 ，正确格式如 ip:port ，" + host)
 					continue
 				}
 
