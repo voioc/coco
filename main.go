@@ -16,6 +16,9 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
+// https://www.liwenzhou.com/posts/Go/zap/
+// https://cloud.tencent.com/developer/article/1811437
+
 const (
 	logTmFmtWithMS = "2006-01-02 15:04:05.000"
 )
