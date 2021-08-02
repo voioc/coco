@@ -37,7 +37,7 @@ var sugar *zap.SugaredLogger
 func InitLog(path string, isDebug bool) {
 	core := initCore(path, true)
 	logger := zap.New(core, zap.AddCaller())
-	sugarLogger = logger.Sugar()
+	sugar = logger.Sugar()
 	defer logger.Sync()
 }
 
