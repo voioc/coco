@@ -1,9 +1,11 @@
 package logzap
 
 import (
+	"fmt"
 	"os"
 	"time"
 
+	"github.com/voioc/coco/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -16,25 +18,32 @@ const (
 var sugar *zap.SugaredLogger
 
 // Init 11
-// func init() {
-// 	until := time.Now().Add(5 * time.Second)
-// 	AppConfig := config.GetConfig()
-// 	for AppConfig == nil {
-// 		if time.Now().After(until) {
-// 			break
-// 		}
+func init() {
+	until := time.Now().Add(5 * time.Second)
+	AppConfig := config.GetConfig()
+	for AppConfig == nil {
+		if time.Now().After(until) {
+			break
+		}
 
-// 		fmt.Println("config not init, sleep...")
-// 		time.Sleep(time.Second)
-// 	}
+		fmt.Println("config not init, sleep...")
+		time.Sleep(time.Second)
+	}
 
-// 	errlog := config.GetConfig().GetString("log.error")
-// 	fmt.Println("error log path:", errlog)
-// 	initLog(errlog)
-// }
+	errlog := config.GetConfig().GetString("log.error")
+
+	isDebug := false
+	env := config.GetConfig().GetString("app.env")
+	if env == "debug" {
+		isDebug = true
+	}
+
+	fmt.Println("error log path:", errlog)
+	initLog(errlog, isDebug)
+}
 
 // InitLog 初始化
-func InitLog(path string, isDebug bool) {
+func initLog(path string, isDebug bool) {
 	core := initCore(path, true)
 	logger := zap.New(core, zap.AddCaller())
 	sugar = logger.Sugar()
@@ -113,8 +122,8 @@ func initCore(path string, isDebug bool) zapcore.Core {
 
 // I info
 func I(template string, args ...interface{}) {
-	// if sugarLogger == nil {
-	// 	InitLog()
+	// if sugar == nil {
+	// 	initLog()
 	// }
 
 	sugar.Infof(template, args)
@@ -122,7 +131,7 @@ func I(template string, args ...interface{}) {
 
 // E Error
 func E(template string, args ...interface{}) {
-	// if sugarLogger == nil {
+	// if sugar == nil {
 	// 	InitLog()
 	// }
 
