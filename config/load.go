@@ -8,8 +8,6 @@
 package config
 
 import (
-	"fmt"
-	"log"
 	"sync"
 
 	"github.com/spf13/viper"
@@ -80,14 +78,6 @@ func GetConfig() *viper.Viper {
 	return config
 }
 
-func SetConfig(file string) {
-	//  configfile := build.GetConfigFile()
-	viper.SetConfigFile(file)
-	fmt.Println("Loading config file " + file)
-
-	once.Do(func() {
-		if err := viper.ReadInConfig(); err != nil {
-			log.Fatalln("打开配置文件失败：", err)
-		}
-	})
+func SetViper(v *viper.Viper) {
+	config = v
 }
