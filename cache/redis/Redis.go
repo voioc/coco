@@ -11,7 +11,7 @@ package redis
 import (
 	"sync"
 
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 )
 
 //使用单例模式创建redis client
