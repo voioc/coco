@@ -99,9 +99,12 @@ func GetRedis() *redis.Client {
 // SetCacheValue 获取缓存对象 第一个参数为key
 func SetCacheValue(c context.Context, key string, value interface{}, expire int) error {
 	v := ""
-	if _, flag := value.(string); !flag {
+	if vStr, flag := value.(string); !flag {
 		v, _ = jsoniter.MarshalToString(value)
+	} else {
+		v = vStr
 	}
+
 	return GetRedis().Set(c, key, v, time.Duration(expire)*time.Second).Err()
 }
 

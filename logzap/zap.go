@@ -45,7 +45,7 @@ func init() {
 // InitLog 初始化
 func initLog(path string, isDebug bool) {
 	core := initCore(path, true)
-	logger := zap.New(core, zap.AddCaller())
+	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 	sugar = logger.Sugar()
 	defer logger.Sync()
 }
