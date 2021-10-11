@@ -38,7 +38,7 @@ func init() {
 		isDebug = true
 	}
 
-	fmt.Println("error log path:", errlog)
+	// fmt.Println("error log path:", errlog)
 	initLog(errlog, isDebug)
 }
 
