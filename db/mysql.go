@@ -68,6 +68,7 @@ func mysqlConn() {
 	}
 
 	engine.ShowSQL(true)
+	engine.SetConnMaxLifetime(5 * time.Minute)
 	engine.SetMaxIdleConns(10)
 	engine.SetMaxOpenConns(100)
 
