@@ -72,7 +72,8 @@ func mysqlConn() {
 	engine.SetMaxIdleConns(10)
 	engine.SetMaxOpenConns(100)
 
-	if config.RunEnv == "release" {
+	env := config.GetConfig().GetString("app.env")
+	if env == "release" {
 		sl := config.GetConfig().GetString("db.log")
 		logWriter, err := os.OpenFile(sl, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
