@@ -47,6 +47,7 @@ func initLog(path string, isDebug bool) {
 	core := initCore(path, true)
 	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 	sugar = logger.Sugar()
+
 	defer logger.Sync()
 }
 
@@ -126,7 +127,7 @@ func I(template string, args ...interface{}) {
 	// 	initLog()
 	// }
 
-	sugar.Infof(template, args)
+	sugar.Infof(template, args...)
 }
 
 // E Error
@@ -135,5 +136,5 @@ func E(template string, args ...interface{}) {
 	// 	InitLog()
 	// }
 
-	sugar.Errorf(template, args)
+	sugar.Errorf(template, args...)
 }
