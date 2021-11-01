@@ -1,7 +1,6 @@
 package trie
 
 import (
-	"fmt"
 	"strings"
 	"sync"
 )
@@ -57,32 +56,32 @@ func (t *Trie) Search(word string) bool {
 	return t.isEnd
 }
 
-// SearchString 2
+// SearchString 搜索完全匹配以及以此字符串开头的后续匹配 返回Trie结构
 func (t *Trie) SearchString(prefix string) *Trie {
 	// var target *Trie
 	for _, v := range prefix {
 		if t.children[v] == nil {
-			// t.Save(string(v))
 			return nil
 		}
-		// else {
-		// 	target = t.children[v]
-		// }
 		t = t.children[v]
 	}
 
 	return t
 }
 
-// SearchPrefix 1
-func (t *Trie) SearchPrefix(prefix string) *Trie {
-	// var Strie *Trie
-	Strie := t.SearchString(prefix)
-	if Strie == nil {
-		t.Save(prefix)
+// SearchPrefix 搜索完全匹配以及以此字符串开头的后续匹配 返回字符串数组
+func (t *Trie) SearchPrefix(prefix string) []string {
+	for _, v := range prefix {
+		if t.children[v] == nil {
+			return nil
+		}
+		t = t.children[v]
 	}
 
-	return Strie
+	result := []string{}
+	t.GetChildren(&result)
+
+	return result
 }
 
 // GetChildren 3
@@ -112,43 +111,58 @@ func (t *Trie) GetChildren(args ...interface{}) {
 	}
 }
 
-// GetOtherChildren 获得所有子节点并拼接
-func (t *Trie) GetOtherChildren(args ...interface{}) {
-	var strArr *[]string
-	if v, ok := args[0].(*[]string); ok {
-		strArr = v
-	}
+// // GetOtherChildren 获得所有子节点并拼接
+// func (t *Trie) GetOtherChildren(args ...interface{}) {
+// 	var strArr *[]string
+// 	if v, ok := args[0].(*[]string); ok {
+// 		strArr = v
+// 	}
 
-	// prefixTmp := ""
-	// prefix := &prefixTmp
-	// if len(args) > 1 {
-	// 	if v, ok := args[1].(*string); ok {
-	// 		prefix = v
-	// 	}
-	// }
+// 	// prefixTmp := ""
+// 	// prefix := &prefixTmp
+// 	// if len(args) > 1 {
+// 	// 	if v, ok := args[1].(*string); ok {
+// 	// 		prefix = v
+// 	// 	}
+// 	// }
 
-	tmp := ""
-	text := &tmp
-	if len(args) > 1 {
-		if v, ok := args[1].(*string); ok {
-			text = v
+// 	tmp := ""
+// 	text := &tmp
+// 	if len(args) > 1 {
+// 		if v, ok := args[1].(*string); ok {
+// 			text = v
+// 		}
+// 	}
+
+// 	// *text = *prefix + t.value
+// 	prefix := *text
+// 	*text += t.value
+
+// 	if t.isEnd {
+// 		*strArr = append(*strArr, *text)
+// 		if len(t.children) != 0 {
+// 			// *prefix = *text
+// 			*text = prefix
+// 		}
+// 	}
+
+// 	for _, node := range t.children {
+// 		fmt.Println(node)
+// 		node.GetChildren(strArr, text)
+// 	}
+// }
+
+// Remove 删除节点
+func (t *Trie) Remove(prefix string, isAll bool) error {
+	t = t.SearchString(prefix)
+	if t.isEnd == true {
+		t.isEnd = false
+		if isAll {
+			t.children = nil
 		}
+
+		return nil
 	}
 
-	// *text = *prefix + t.value
-	prefix := *text
-	*text += t.value
-
-	if t.isEnd {
-		*strArr = append(*strArr, *text)
-		if len(t.children) != 0 {
-			// *prefix = *text
-			*text = prefix
-		}
-	}
-
-	for _, node := range t.children {
-		fmt.Println(node)
-		node.GetChildren(strArr, text)
-	}
+	return nil
 }
