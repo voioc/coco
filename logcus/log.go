@@ -14,11 +14,10 @@ import (
 	"os"
 	"runtime"
 	"runtime/debug"
-	"time"
 
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/sirupsen/logrus"
-	"github.com/voioc/coco/config"
+	"github.com/spf13/viper"
 )
 
 var log *logrus.Logger
@@ -36,23 +35,23 @@ var errFile *os.File
 
 // Init 11
 func init() {
-	until := time.Now().Add(5 * time.Second)
-	AppConfig := config.GetConfig()
-	for AppConfig == nil {
-		if time.Now().After(until) {
-			break
-		}
+	// until := time.Now().Add(5 * time.Second)
+	// AppConfig := config.GetConfig()
+	// for AppConfig == nil {
+	// 	if time.Now().After(until) {
+	// 		break
+	// 	}
 
-		fmt.Println("config not init, sleep...")
-		time.Sleep(time.Second)
-	}
+	// 	fmt.Println("config not init, sleep...")
+	// 	time.Sleep(time.Second)
+	// }
 
 	InitLog()
 }
 
 func InitLog() *logrus.Logger {
 	var err error
-	errlog := config.GetConfig().GetString("log.error")
+	errlog := viper.GetString("log.error")
 	// fmt.Println("error log path:", errlog)
 	if errFile, err = os.OpenFile(errlog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666); err != nil {
 		log.Fatalln("打开日志文件失败：", err)

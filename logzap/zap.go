@@ -1,11 +1,12 @@
 package logzap
 
 import (
-	"fmt"
+	"context"
 	"os"
 	"time"
 
-	"github.com/voioc/coco/config"
+	uuid "github.com/satori/go.uuid"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -19,21 +20,21 @@ var sugar *zap.SugaredLogger
 
 // Init 11
 func init() {
-	until := time.Now().Add(5 * time.Second)
-	AppConfig := config.GetConfig()
-	for AppConfig == nil {
-		if time.Now().After(until) {
-			break
-		}
+	// until := time.Now().Add(5 * time.Second)
+	// AppConfig := config.GetConfig()
+	// for AppConfig == nil {
+	// 	if time.Now().After(until) {
+	// 		break
+	// 	}
 
-		fmt.Println("config not init, sleep...")
-		time.Sleep(time.Second)
-	}
+	// 	fmt.Println("config not init, sleep...")
+	// 	time.Sleep(time.Second)
+	// }
 
-	errlog := config.GetConfig().GetString("log.error")
+	errlog := viper.GetString("log.error")
 
 	isDebug := false
-	env := config.GetConfig().GetString("app.env")
+	env := viper.GetString("env")
 	if env == "debug" {
 		isDebug = true
 	}
@@ -117,8 +118,38 @@ func initCore(path string, isDebug bool) zapcore.Core {
 	// 		syncWriter, zap.NewAtomicLevelAt(l.logMinLevel))
 	// }
 
-	return zapcore.NewCore(zapcore.NewConsoleEncoder(encoderConf),
+	// return zapcore.NewCore(zapcore.NewConsoleEncoder(encoderConf),
+	// syncWriter, zap.NewAtomicLevelAt(zapcore.DebugLevel))
+	return zapcore.NewCore(zapcore.NewJSONEncoder(encoderConf),
 		syncWriter, zap.NewAtomicLevelAt(zapcore.DebugLevel))
+}
+
+func formatField(c context.Context, tag string) []zapcore.Field {
+	fields := make([]zapcore.Field, 0)
+
+	if tag != "" {
+		fields = append(fields, zap.String("tag", tag))
+	}
+
+	if c == nil {
+		return fields
+	}
+
+	// if g, ok := c.(*gin.Context); ok {
+	// 	c = g.Request.Context()
+	// }
+
+	var traceID string
+	trace := c.Value("x_trace_id")
+	if id, ok := trace.(string); ok {
+		traceID = id
+	}
+
+	if traceID == "" {
+		traceID = uuid.NewV4().String()
+	}
+
+	return append(fields, zap.String("x_trace_id", traceID))
 }
 
 // I info
@@ -137,4 +168,44 @@ func E(template string, args ...interface{}) {
 	// }
 
 	sugar.Errorf(template, args...)
+}
+
+func Dx(c context.Context, tag, template string, args ...interface{}) {
+	// msg := fmt.Sprintf(template, args...)
+	// fields := formatField(c, tag)
+
+	// logzap.Debug(msg, fields...)
+	sugar.Debugf(template, args...)
+}
+
+func Wx(c context.Context, tag, template string, args ...interface{}) {
+	// msg := fmt.Sprintf(template, args...)
+	// fields := formatField(c, tag)
+
+	// logzap.Warn(msg, fields...)
+	sugar.Warnf(template, args...)
+}
+
+func DPx(c context.Context, tag, template string, args ...interface{}) {
+	// msg := fmt.Sprintf(template, args...)
+	// fields := formatField(c, tag)
+
+	// logzap.DPanic(msg, fields...)
+	sugar.DPanicf(template, args...)
+}
+
+func Px(c context.Context, tag, template string, args ...interface{}) {
+	// msg := fmt.Sprintf(template, args...)
+	// fields := formatField(c, tag)
+
+	// logzap.Panic(msg, fields...)
+	sugar.Panicf(template, args...)
+}
+
+func Fx(c context.Context, tag, template string, args ...interface{}) {
+	// msg := fmt.Sprintf(template, args...)
+	// fields := formatField(c, tag)
+
+	// logzap.Fatal(msg, fields...)
+	sugar.Fatalf(template, args...)
 }

@@ -2,18 +2,18 @@ package cache
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
 	"github.com/bradfitz/gomemcache/memcache"
+	"github.com/fsnotify/fsnotify"
 	"github.com/go-redis/redis/v8"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/spf13/viper"
 	"github.com/voioc/coco/cache/memcached"
 	credis "github.com/voioc/coco/cache/redis"
-	"github.com/voioc/coco/config"
-	"github.com/voioc/coco/logcus"
 )
 
 type cacheConfigSingle struct {
@@ -30,59 +30,63 @@ var cacheConfig []cacheConfigSingle
 var rc *redis.Client
 var mem *memcache.Client
 
-func init() {
-	until := time.Now().Add(5 * time.Second)
-	AppConfig := config.GetConfig()
-	for AppConfig == nil {
-		if time.Now().After(until) {
-			break
-		}
-
-		fmt.Println("config not init, sleep...")
-		time.Sleep(time.Second)
-		// _, err = os.Stat(filePath)
+func Init() error {
+	err := cacheConnect()
+	if err == nil {
+		// 监控配置文件是否变化
+		viper.WatchConfig()
+		viper.OnConfigChange(func(e fsnotify.Event) {
+			viper.ReadInConfig()
+			cacheConnect()
+		})
 	}
 
-	//必须先调用这个函数初始化SDk  (或者在init函数初始化)
-	AppConfig.UnmarshalKey("cache", &cacheConfig)
-	err := connect()
-	if err != nil {
-		logcus.Error("初始化redis数据异常:" + err.Error())
-	}
+	return err
 }
 
+// func initCache() error {
+// 	// 监控配置文件是否变化
+// 	viper.WatchConfig()
+// 	viper.OnConfigChange(func(e fsnotify.Event) {
+// 		viper.ReadInConfig()
+// 		cacheConnect()
+// 	})
+
+// 	return cacheConnect()
+// }
+
 // 连接
-func connect() error {
+func cacheConnect() error {
+	if err := viper.UnmarshalKey("cache", &cacheConfig); err != nil {
+		log.Fatalln("缓存配置格式错误")
+	}
+
 	for _, conf := range cacheConfig {
 		if len(conf.Nodes) < 1 {
-			logcus.Error("没有可用的节点")
-			return errors.New("no useful address")
+			fmt.Println("没有可用的节点")
+			continue
 		}
 
 		if conf.Driver == "memcached" {
-			var servers []string
-			for _, row := range conf.Nodes {
-				servers = append(servers, row)
-			}
-			mem = memcached.GetInstance(servers)
+			mem = memcached.GetInstance(conf.Nodes)
 		}
 
 		if conf.Driver == "redis" {
-			//取第1个可用IP
-			for _, host := range conf.Nodes {
-				tempStr := strings.Split(host, ":") //ip:port  冒号分隔
-				if len(tempStr) < 2 {
-					logcus.Error("配置文件host格式有误 ，正确格式如 ip:port ，" + host)
-					continue
-				}
-
-				host := tempStr[0] + ":" + tempStr[1]
-
-				//使用配置文件的密码
-				rc = credis.GetInstance(host, conf.Password)
-				break
+			// 取第1个可用IP
+			tempStr := strings.Split(conf.Nodes[0], ":") //ip:port  冒号分隔
+			if len(tempStr) < 2 {
+				fmt.Println("配置文件host格式有误,正确格式如 ip:port," + conf.Nodes[0])
+				continue
 			}
+
+			host := tempStr[0]
+			port := tempStr[1]
+			rc = credis.GetInstance(host, port, conf.Password)
 		}
+	}
+
+	if mem == nil && rc == nil {
+		log.Fatalln("init cache failed")
 	}
 
 	return nil
@@ -91,7 +95,14 @@ func connect() error {
 // GetRedis 获得redis
 func GetRedis() *redis.Client {
 	if rc == nil {
-		connect()
+		if err := cacheConnect(); err != nil {
+			// 监控配置文件是否变化
+			viper.WatchConfig()
+			viper.OnConfigChange(func(e fsnotify.Event) {
+				viper.ReadInConfig()
+				cacheConnect()
+			})
+		}
 	}
 	return rc
 }
