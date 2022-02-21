@@ -107,8 +107,8 @@ func GetRedis() *redis.Client {
 	return rc
 }
 
-// SetCacheValue 获取缓存对象 第一个参数为key
-func SetCacheValue(c context.Context, key string, value interface{}, expire int) error {
+// SetCache 获取缓存对象 第一个参数为key
+func SetCache(c context.Context, key string, value interface{}, expire int) error {
 	v := ""
 	if vStr, flag := value.(string); !flag {
 		v, _ = jsoniter.MarshalToString(value)
@@ -119,7 +119,7 @@ func SetCacheValue(c context.Context, key string, value interface{}, expire int)
 	return GetRedis().Set(c, key, v, time.Duration(expire)*time.Second).Err()
 }
 
-// GetCacheValue 获取缓存对象 第一个参数为key
-func GetCacheValue(c context.Context, key string) (string, error) {
+// GetCache 获取缓存对象 第一个参数为key
+func GetCache(c context.Context, key string) (string, error) {
 	return GetRedis().Get(c, key).Result()
 }

@@ -60,7 +60,7 @@ func InitDB() {
 		key := fmt.Sprintf("db.%s", row) // 获取配置的key
 		// 读取配置文件
 		if err := viper.GetViper().UnmarshalKey(key, &ds); err != nil {
-			fmt.Println(err.Error())
+			fmt.Println("decode config error: ", err.Error())
 			continue
 		}
 
@@ -105,11 +105,11 @@ func mysqlConnect(dbName string, conf DS) error {
 		fmt.Printf("%s db dsn is empty", dbName)
 	}
 
-	master := conf.Dsn[0]
+	// master := conf.Dsn[0]
 	// slave := conf.Dsn[1:]
 
 	var err error
-	engine, err := xorm.NewEngineGroup("mysql", master)
+	engine, err := xorm.NewEngineGroup("mysql", conf.Dsn)
 	if err != nil {
 		logcus.GetLogger().Fatalln("Connect mysql error: ", err.Error())
 	}
