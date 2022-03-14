@@ -10,6 +10,7 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -123,7 +124,7 @@ func mysqlConnect(dbName string, conf DS) error {
 	if env == "release" {
 		logWriter, err := os.OpenFile(conf.Log, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
-			logzap.E("打开数据库日志文件失败:", err)
+			logzap.Ex(context.Background(), "打开数据库日志文件失败:", err)
 		}
 
 		logger := xlog.NewSimpleLogger(logWriter)

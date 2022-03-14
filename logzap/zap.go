@@ -2,64 +2,63 @@ package logzap
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"strings"
 	"time"
 
-	uuid "github.com/satori/go.uuid"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
+// var logzap = zap.New(initCore(), zap.AddCallerSkip(1), zap.AddStacktrace(zapcore.WarnLevel), zap.AddCaller())
+var logzap *zap.Logger
+
+type ContextKey string
+
 const (
 	logTmFmtWithMS = "2006-01-02 15:04:05.000"
 )
 
-var sugar *zap.SugaredLogger
+func Zap() *zap.Logger {
+	return logzap
+}
 
-// Init 11
-func init() {
-	// until := time.Now().Add(5 * time.Second)
-	// AppConfig := config.GetConfig()
-	// for AppConfig == nil {
-	// 	if time.Now().After(until) {
-	// 		break
-	// 	}
+func InitZap() {
+	logzap = zap.New(initCore(), zap.AddCallerSkip(1), zap.AddCaller())
+}
 
-	// 	fmt.Println("config not init, sleep...")
-	// 	time.Sleep(time.Second)
-	// }
-
-	errlog := viper.GetString("log.error")
-
-	isDebug := false
-	env := viper.GetString("env")
-	if env == "debug" {
-		isDebug = true
+func initCore() zapcore.Core {
+	logPath := "runtime/app.log"
+	if errlog := viper.GetString("log.error"); errlog != "" {
+		logPath = errlog
 	}
 
-	// fmt.Println("error log path:", errlog)
-	initLog(errlog, isDebug)
-}
+	// isDebug := false
+	// env := viper.GetString("env")
+	// if env == "debug" {
+	// 	isDebug = true
+	// }
 
-// InitLog 初始化
-func initLog(path string, isDebug bool) {
-	core := initCore(path, true)
-	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
-	sugar = logger.Sugar()
+	// env := strings.ToLower(os.Getenv("RunEnv"))
+	// if env != "product" && env != "test" && env != "gray" {
+	// 	logPath = "runtime/"
+	// }
 
-	defer logger.Sync()
-}
+	if closed := viper.GetBool("log.closed"); closed {
+		logPath = "/dev/null"
+	}
 
-func initCore(path string, isDebug bool) zapcore.Core {
 	opts := []zapcore.WriteSyncer{
 		zapcore.AddSync(&lumberjack.Logger{
-			Filename:  path,  // ⽇志⽂件路径
-			MaxSize:   512,   // 单位为MB,默认为512MB
-			MaxAge:    7,     // 文件最多保存多少天
-			LocalTime: true,  // 采用本地时间
-			Compress:  false, // 是否压缩日志
+			Filename:  logPath, //fmt.Sprintf("%s%s/%s.log", logPath, name, name), // ⽇志⽂件路径
+			MaxSize:   102400,  // 单位为MB,默认为512MB
+			MaxAge:    7,       // 文件最多保存多少天
+			LocalTime: true,    // 采用本地时间
+			Compress:  false,   // 是否压缩日志
 		}),
 	}
 
@@ -67,7 +66,7 @@ func initCore(path string, isDebug bool) zapcore.Core {
 	// 	opts = append(opts, zapcore.AddSync(os.Stdout))
 	// }
 
-	if isDebug {
+	if env := strings.ToLower(os.Getenv("RunEnv")); env == "debug" {
 		opts = append(opts, zapcore.AddSync(os.Stdout))
 	}
 
@@ -75,29 +74,29 @@ func initCore(path string, isDebug bool) zapcore.Core {
 
 	// 自定义时间输出格式
 	customTimeEncoder := func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-		enc.AppendString("[" + t.Format(logTmFmtWithMS) + "]")
+		enc.AppendString("" + t.Format(logTmFmtWithMS) + "")
 	}
 
 	// 自定义日志级别显示
 	customLevelEncoder := func(level zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
-		enc.AppendString("[" + level.CapitalString() + "]")
+		enc.AppendString("" + level.CapitalString() + "")
 	}
 
 	// 自定义文件：行号输出项
 	customCallerEncoder := func(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
 		// enc.AppendString("[" + l.traceId + "]")
-		enc.AppendString("[" + caller.TrimmedPath() + "]")
+		enc.AppendString("" + caller.TrimmedPath() + "")
 	}
 
 	encoderConf := zapcore.EncoderConfig{
 		CallerKey:      "caller_line", // 打印文件名和行数
 		LevelKey:       "level_name",
 		MessageKey:     "msg",
-		TimeKey:        "ts",
+		TimeKey:        "time",
 		StacktraceKey:  "stacktrace",
 		LineEnding:     zapcore.DefaultLineEnding,
 		EncodeTime:     customTimeEncoder,   // 自定义时间格式
-		EncodeLevel:    customLevelEncoder,  // 大小写编码器
+		EncodeLevel:    customLevelEncoder,  // 小写编码器
 		EncodeCaller:   customCallerEncoder, // 全路径编码器
 		EncodeDuration: zapcore.SecondsDurationEncoder,
 		EncodeName:     zapcore.FullNameEncoder,
@@ -105,12 +104,8 @@ func initCore(path string, isDebug bool) zapcore.Core {
 
 	// // level大写染色编码器
 	// if l.enableColor {
-	// encoderConf.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	// 	encoderConf.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	// }
-
-	if isDebug {
-		encoderConf.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	}
 
 	// // json 格式化处理
 	// if l.jsonFormat {
@@ -118,8 +113,6 @@ func initCore(path string, isDebug bool) zapcore.Core {
 	// 		syncWriter, zap.NewAtomicLevelAt(l.logMinLevel))
 	// }
 
-	// return zapcore.NewCore(zapcore.NewConsoleEncoder(encoderConf),
-	// syncWriter, zap.NewAtomicLevelAt(zapcore.DebugLevel))
 	return zapcore.NewCore(zapcore.NewJSONEncoder(encoderConf),
 		syncWriter, zap.NewAtomicLevelAt(zapcore.DebugLevel))
 }
@@ -140,72 +133,113 @@ func formatField(c context.Context, tag string) []zapcore.Field {
 	// }
 
 	var traceID string
-	trace := c.Value("x_trace_id")
+	trace := c.Value(ContextKey("x_trace_id"))
 	if id, ok := trace.(string); ok {
 		traceID = id
 	}
 
-	if traceID == "" {
-		traceID = uuid.NewV4().String()
-	}
+	// if traceID == "" {
+	// 	traceID = uuid.NewV4().String()
+	// }
 
 	return append(fields, zap.String("x_trace_id", traceID))
 }
 
-// I info
-func I(template string, args ...interface{}) {
-	// if sugar == nil {
-	// 	initLog()
-	// }
+func Ix(c context.Context, tag string, template interface{}, args ...interface{}) {
+	var msg string
 
-	sugar.Infof(template, args...)
+	if tpl, flag := template.(string); flag {
+		msg = fmt.Sprintf(tpl, args...)
+	}
+
+	if tpl, flag := template.(map[string]interface{}); flag {
+		msg, _ = jsoniter.MarshalToString(tpl)
+	}
+
+	fields := formatField(c, tag)
+	logzap.Info(msg, fields...)
 }
 
-// E Error
-func E(template string, args ...interface{}) {
-	// if sugar == nil {
-	// 	InitLog()
-	// }
+func Ex(c context.Context, tag string, template interface{}, args ...interface{}) {
+	var msg string
+	if tpl, flag := template.(string); flag {
+		msg = fmt.Sprintf(tpl, args...)
+	}
 
-	sugar.Errorf(template, args...)
+	if tpl, flag := template.(map[string]interface{}); flag {
+		msg, _ = jsoniter.MarshalToString(tpl)
+	}
+
+	fields := formatField(c, tag)
+	logzap.Error(msg, fields...)
 }
 
-func Dx(c context.Context, tag, template string, args ...interface{}) {
-	// msg := fmt.Sprintf(template, args...)
-	// fields := formatField(c, tag)
+func Dx(c context.Context, tag string, template interface{}, args ...interface{}) {
+	var msg string
+	if tpl, flag := template.(string); flag {
+		msg = fmt.Sprintf(tpl, args...)
+	}
 
-	// logzap.Debug(msg, fields...)
-	sugar.Debugf(template, args...)
+	if tpl, flag := template.(map[string]interface{}); flag {
+		msg, _ = jsoniter.MarshalToString(tpl)
+	}
+
+	fields := formatField(c, tag)
+	logzap.Debug(msg, fields...)
 }
 
-func Wx(c context.Context, tag, template string, args ...interface{}) {
-	// msg := fmt.Sprintf(template, args...)
-	// fields := formatField(c, tag)
+func Wx(c context.Context, tag string, template interface{}, args ...interface{}) {
+	var msg string
+	if tpl, flag := template.(string); flag {
+		msg = fmt.Sprintf(tpl, args...)
+	}
 
-	// logzap.Warn(msg, fields...)
-	sugar.Warnf(template, args...)
+	if tpl, flag := template.(map[string]interface{}); flag {
+		msg, _ = jsoniter.MarshalToString(tpl)
+	}
+
+	fields := formatField(c, tag)
+	logzap.Warn(msg, fields...)
 }
 
-func DPx(c context.Context, tag, template string, args ...interface{}) {
-	// msg := fmt.Sprintf(template, args...)
-	// fields := formatField(c, tag)
+func DPx(c context.Context, tag string, template interface{}, args ...interface{}) {
+	var msg string
+	if tpl, flag := template.(string); flag {
+		msg = fmt.Sprintf(tpl, args...)
+	}
 
-	// logzap.DPanic(msg, fields...)
-	sugar.DPanicf(template, args...)
+	if tpl, flag := template.(map[string]interface{}); flag {
+		msg, _ = jsoniter.MarshalToString(tpl)
+	}
+
+	fields := formatField(c, tag)
+	logzap.DPanic(msg, fields...)
 }
 
-func Px(c context.Context, tag, template string, args ...interface{}) {
-	// msg := fmt.Sprintf(template, args...)
-	// fields := formatField(c, tag)
+func Px(c context.Context, tag string, template interface{}, args ...interface{}) {
+	var msg string
+	if tpl, flag := template.(string); flag {
+		msg = fmt.Sprintf(tpl, args...)
+	}
 
-	// logzap.Panic(msg, fields...)
-	sugar.Panicf(template, args...)
+	if tpl, flag := template.(map[string]interface{}); flag {
+		msg, _ = jsoniter.MarshalToString(tpl)
+	}
+
+	fields := formatField(c, tag)
+	logzap.Panic(msg, fields...)
 }
 
-func Fx(c context.Context, tag, template string, args ...interface{}) {
-	// msg := fmt.Sprintf(template, args...)
-	// fields := formatField(c, tag)
+func Fx(c context.Context, tag string, template interface{}, args ...interface{}) {
+	var msg string
+	if tpl, flag := template.(string); flag {
+		msg = fmt.Sprintf(tpl, args...)
+	}
 
-	// logzap.Fatal(msg, fields...)
-	sugar.Fatalf(template, args...)
+	if tpl, flag := template.(map[string]interface{}); flag {
+		msg, _ = jsoniter.MarshalToString(tpl)
+	}
+
+	fields := formatField(c, tag)
+	logzap.Fatal(msg, fields...)
 }
