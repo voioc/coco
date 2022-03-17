@@ -89,8 +89,8 @@ func initCore() zapcore.Core {
 	}
 
 	encoderConf := zapcore.EncoderConfig{
-		CallerKey:      "caller_line", // 打印文件名和行数
-		LevelKey:       "level_name",
+		CallerKey:      "caller", // 打印文件名和行数
+		LevelKey:       "level",
 		MessageKey:     "msg",
 		TimeKey:        "time",
 		StacktraceKey:  "stacktrace",
