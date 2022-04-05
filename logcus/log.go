@@ -34,7 +34,7 @@ var errFile *os.File
 // }
 
 // Init 11
-func init() {
+func Init() {
 	// until := time.Now().Add(5 * time.Second)
 	// AppConfig := config.GetConfig()
 	// for AppConfig == nil {
