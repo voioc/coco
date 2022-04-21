@@ -34,20 +34,20 @@ var errFile *os.File
 // }
 
 // Init 11
-func Init() {
-	// until := time.Now().Add(5 * time.Second)
-	// AppConfig := config.GetConfig()
-	// for AppConfig == nil {
-	// 	if time.Now().After(until) {
-	// 		break
-	// 	}
+// func init() {
+// 	// until := time.Now().Add(5 * time.Second)
+// 	// AppConfig := config.GetConfig()
+// 	// for AppConfig == nil {
+// 	// 	if time.Now().After(until) {
+// 	// 		break
+// 	// 	}
 
-	// 	fmt.Println("config not init, sleep...")
-	// 	time.Sleep(time.Second)
-	// }
+// 	// 	fmt.Println("config not init, sleep...")
+// 	// 	time.Sleep(time.Second)
+// 	// }
 
-	InitLog()
-}
+// 	InitLog()
+// }
 
 func InitLog() *logrus.Logger {
 	var err error
