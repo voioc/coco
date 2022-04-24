@@ -58,14 +58,14 @@ func InitDB() {
 		key := fmt.Sprintf("db.%s", row) // 获取配置的key
 		// 读取配置文件
 		if err := viper.GetViper().UnmarshalKey(key, &ds); err != nil {
-			fmt.Println("decode config error: ", err.Error())
+			log.Println("decode config error: ", err.Error())
 			continue
 		}
 
 		// 数据库初始化
 		if ds.Driver == "mysql" {
 			if err := mysqlConnect(row, ds); err != nil {
-				fmt.Printf("%s, db: %s\n", err.Error(), row)
+				log.Printf("%s, db: %s\n", err.Error(), row)
 				continue
 			}
 		}
@@ -100,7 +100,7 @@ func mysqlConnect(dbName string, conf DS) error {
 	}
 
 	if len(conf.Dsn) < 1 {
-		fmt.Printf("%s db dsn is empty \n", dbName)
+		log.Printf("%s db dsn is empty \n", dbName)
 	}
 
 	// master := conf.Dsn[0]
@@ -125,7 +125,7 @@ func mysqlConnect(dbName string, conf DS) error {
 	if env == "release" {
 		logWriter, err := os.OpenFile(conf.Log, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
-			fmt.Println("打开数据库日志文件失败:", err.Error())
+			log.Println("打开数据库日志文件失败:", err.Error())
 			return err
 		}
 
