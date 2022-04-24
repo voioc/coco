@@ -109,7 +109,11 @@ func mysqlConnect(dbName string, conf DS) error {
 	var err error
 	engine, err := xorm.NewEngineGroup("mysql", conf.Dsn)
 	if err != nil {
-		fmt.Println("Connect mysql error: ", err.Error())
+		return err
+	}
+
+	if err := engine.Ping(); err != nil {
+		return err
 	}
 
 	// engine.ShowSQL(true)
@@ -122,11 +126,13 @@ func mysqlConnect(dbName string, conf DS) error {
 		logWriter, err := os.OpenFile(conf.Log, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
 			fmt.Println("打开数据库日志文件失败:", err.Error())
+			return err
 		}
 
 		logger := xlog.NewSimpleLogger(logWriter)
-		logger.ShowSQL(true)
 		engine.SetLogger(logger)
+	} else {
+		engine.ShowSQL(true)
 	}
 
 	if dbList == nil {
