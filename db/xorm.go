@@ -10,7 +10,6 @@
 package db
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -19,8 +18,6 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/spf13/viper"
-	"github.com/voioc/coco/logcus"
-	"github.com/voioc/coco/logzap"
 	"xorm.io/xorm"
 	xlog "xorm.io/xorm/log"
 )
@@ -103,7 +100,7 @@ func mysqlConnect(dbName string, conf DS) error {
 	}
 
 	if len(conf.Dsn) < 1 {
-		fmt.Printf("%s db dsn is empty", dbName)
+		fmt.Printf("%s db dsn is empty \n", dbName)
 	}
 
 	// master := conf.Dsn[0]
@@ -112,19 +109,19 @@ func mysqlConnect(dbName string, conf DS) error {
 	var err error
 	engine, err := xorm.NewEngineGroup("mysql", conf.Dsn)
 	if err != nil {
-		logcus.GetLogger().Fatalln("Connect mysql error: ", err.Error())
+		fmt.Println("Connect mysql error: ", err.Error())
 	}
 
-	engine.ShowSQL(true)
+	// engine.ShowSQL(true)
 	engine.SetConnMaxLifetime(5 * time.Minute)
-	engine.SetMaxIdleConns(10)
-	engine.SetMaxOpenConns(100)
+	engine.SetMaxIdleConns(25)
+	engine.SetMaxOpenConns(50)
 
 	env := viper.GetString("env")
 	if env == "release" {
 		logWriter, err := os.OpenFile(conf.Log, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
-			logzap.Ex(context.Background(), "打开数据库日志文件失败:", err)
+			fmt.Println("打开数据库日志文件失败:", err.Error())
 		}
 
 		logger := xlog.NewSimpleLogger(logWriter)
