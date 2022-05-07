@@ -37,28 +37,33 @@ func initCore() zapcore.Core {
 		logPath = errlog
 	}
 
-	// isDebug := false
-	// env := viper.GetString("env")
-	// if env == "debug" {
-	// 	isDebug = true
-	// }
-
-	// env := strings.ToLower(os.Getenv("RunEnv"))
-	// if env != "product" && env != "test" && env != "gray" {
-	// 	logPath = "runtime/"
-	// }
-
 	if closed := viper.GetBool("log.closed"); closed {
 		logPath = "/dev/null"
 	}
 
+	maxSize := viper.GetInt("log.max_size")
+	if maxSize == 0 {
+		maxSize = 5120
+	}
+
+	maxAge := viper.GetInt("log.max_age")
+	if maxSize == 0 {
+		maxAge = 7
+	}
+
+	maxBackup := viper.GetInt("log.max_backup")
+	if maxBackup == 0 {
+		maxBackup = 5
+	}
+
 	opts := []zapcore.WriteSyncer{
 		zapcore.AddSync(&lumberjack.Logger{
-			Filename:  logPath, //fmt.Sprintf("%s%s/%s.log", logPath, name, name), // ⽇志⽂件路径
-			MaxSize:   102400,  // 单位为MB,默认为512MB
-			MaxAge:    7,       // 文件最多保存多少天
-			LocalTime: true,    // 采用本地时间
-			Compress:  false,   // 是否压缩日志
+			Filename:   logPath, // fmt.Sprintf("%s%s/%s.log", logPath, name, name), // ⽇志⽂件路径
+			MaxSize:    maxSize, // 单位为MB,默认为100MB
+			MaxAge:     maxAge,  // 文件最多保存多少天
+			MaxBackups: maxBackup,
+			LocalTime:  true,  // 采用本地时间
+			Compress:   false, // 是否压缩日志
 		}),
 	}
 

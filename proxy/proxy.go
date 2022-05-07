@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/voioc/coco/logcus"
 )
 
 // ProxyClient 类型
@@ -54,16 +53,14 @@ func getClinet() *http.Client {
 
 // HttpResponse 请求结果数据结构
 type HttpResponse struct {
-	URL            string
-	HttpStatus     string
-	HttpStatusCode int
-	ContentLength  int64
-	Body           []byte
+	http.Response
+	URL  string
+	Body []byte
 }
 
 // NewResponse 默认返回数据结构
 func NewResponse() *HttpResponse {
-	return &HttpResponse{HttpStatusCode: -1, Body: []byte("{}")}
+	return &HttpResponse{Body: []byte("{}")}
 }
 
 // HttpModel 并发请求单个请求类型
@@ -81,14 +78,15 @@ type HttpModel struct {
 type Result struct {
 	Job  HttpModel
 	Data []byte
+	Err  error
 }
 
-func SampleClient(urls string, method string, header map[string]string, postdata interface{}) *HttpResponse {
+func SampleClient(urls string, method string, header map[string]string, postdata interface{}) (*HttpResponse, error) {
 	// Service.Flagtime("1")
 	var pbody io.Reader
 	req, err := http.NewRequest(method, urls, nil)
 	if err != nil {
-		logcus.Error("CacheHTTP gen newRequest:" + err.Error())
+		return nil, err
 	}
 
 	if postdata != nil {
@@ -117,7 +115,8 @@ func SampleClient(urls string, method string, header map[string]string, postdata
 			}
 
 			if req, err = http.NewRequest(method, urls, pbody); err != nil {
-				logcus.Error("CacheHTTP gen newRequest:" + err.Error())
+				// logcus.Error("CacheHTTP gen newRequest:" + err.Error())
+				return nil, err
 			}
 			// req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			// Common.SetDebug(fmt.Sprintf("Send HTTP Query: %s", urls), 2)
@@ -135,38 +134,39 @@ func SampleClient(urls string, method string, header map[string]string, postdata
 	client := getClinet()
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err.Error())
-		//不抛出错误而是接口降级
 		// Common.SetDebug(fmt.Sprintf("HTTP Query Downgrade: %s", err.Error()), 2)
-		logcus.Error("CacheHTTP request error: " + err.Error())
+		// logcus.Error("CacheHTTP request error: " + err.Error())
 
-		return httpRes
+		return nil, err
 	}
-	if resp.StatusCode != 200 {
-		//不抛出错误而是接口降级
-		// Common.SetDebug(fmt.Sprintf("HTTP Query Downgrade: non-200 StatusCode:%s", urls), 2)
-		logcus.Error("CacheHTTP request got non-200 StatusCode: " + urls)
 
-		httpRes.HttpStatus = resp.Status
-		httpRes.HttpStatusCode = resp.StatusCode
-		return httpRes
-	}
+	// if resp.StatusCode != 200 {
+	// 	//不抛出错误而是接口降级
+	// 	// Common.SetDebug(fmt.Sprintf("HTTP Query Downgrade: non-200 StatusCode:%s", urls), 2)
+	// 	logcus.Error("CacheHTTP request got non-200 StatusCode: " + urls)
+
+	// 	httpRes.HttpStatus = resp.Status
+	// 	httpRes.HttpStatusCode = resp.StatusCode
+	// 	return httpRes
+	// }
 
 	// Common.SetDebug(fmt.Sprintf("HTTP Query Result{"+Service.Flagtime("1")+"} : status :%s, content length:%d, url:%s", resp.Status, resp.ContentLength, urls), 2)
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		logcus.Error("CacheHTTP read response error: " + err.Error())
+		return nil, fmt.Errorf("decode resp.Body error: %s", err.Error())
 	}
 
 	httpRes.URL = urls
-	httpRes.HttpStatus = resp.Status
-	httpRes.HttpStatusCode = resp.StatusCode
-	httpRes.ContentLength = resp.ContentLength
 	httpRes.Body = body
+	httpRes.Response = *resp
 
-	return httpRes
+	// httpRes.HttpStatus = resp.Status
+	// httpRes.HttpStatusCode = resp.StatusCode
+	// httpRes.ContentLength = resp.ContentLength
+
+	return httpRes, nil
 }
 
 // Multiple
@@ -197,13 +197,14 @@ func (m *Multiple) MultipleClient(ch []HttpModel) []Result {
 
 func (m *Multiple) worker(wg *sync.WaitGroup) {
 	for job := range m.jobs {
-		output := Result{job, m.httpQuery(job)}
+		data, err := m.httpQuery(job)
+		output := Result{job, data, err}
 		m.results <- output
 	}
 	wg.Done()
 }
 
-func (m *Multiple) httpQuery(request HttpModel) []byte {
+func (m *Multiple) httpQuery(request HttpModel) ([]byte, error) {
 	// cache_key := "HTTP_" + request.HTTPUniqid
 	// var retdata []byte
 	// if request.NeedCache {
@@ -215,8 +216,8 @@ func (m *Multiple) httpQuery(request HttpModel) []byte {
 	// 		// Common.SetDebug(fmt.Sprintf("Cache Miss: %s", cache_key), 2)
 	// 	}
 	// }
-	tmp := SampleClient(request.URL, request.Method, request.Header, request.Postdata)
-	return tmp.Body
+	tmp, err := SampleClient(request.URL, request.Method, request.Header, request.Postdata)
+	return tmp.Body, err
 }
 
 //分配协程池
