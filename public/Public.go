@@ -192,7 +192,7 @@ func FormatError(msg, err string, debug interface{}) string {
 func FormatJson(text string) string {
 	newText := strings.ReplaceAll(text, "\"{", "{")
 	newText = strings.ReplaceAll(newText, "}\"", "}")
-	newText = strings.ReplaceAll(newText, "\\", "")
+	newText = strings.ReplaceAll(newText, "\\\"", "\"")
 	return newText
 }
 
