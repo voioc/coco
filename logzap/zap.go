@@ -42,7 +42,7 @@ func InitZap(name string) {
 			logPath = "runtime/"
 		}
 
-		logPath = fmt.Sprintf("%s%s/%s.log", logPath, name, name)
+		logPath = fmt.Sprintf("%s/%s.log", logPath, name)
 
 		if closed := viper.GetBool("log.closed"); closed {
 			logPath = "/dev/null"
