@@ -1,4 +1,4 @@
-package logger
+package logzap
 
 import (
 	"context"
