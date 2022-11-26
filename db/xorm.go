@@ -34,21 +34,21 @@ var dbList map[string]*xorm.EngineGroup
 // var engine *xorm.EngineGroup
 var lockMysql sync.Mutex
 
-func init() {
-	// until := time.Now().Add(time.Second)
-	// AppConfig := config.GetConfig()
-	// for AppConfig == nil {
-	// 	if time.Now().After(until) {
-	// 		break
-	// 	}
+// func init() {
+// 	// until := time.Now().Add(time.Second)
+// 	// AppConfig := config.GetConfig()
+// 	// for AppConfig == nil {
+// 	// 	if time.Now().After(until) {
+// 	// 		break
+// 	// 	}
 
-	// 	fmt.Println("config not init, sleep...")
-	// 	time.Sleep(time.Second)
-	// 	// _, err = os.Stat(filePath)
-	// }
+// 	// 	fmt.Println("config not init, sleep...")
+// 	// 	time.Sleep(time.Second)
+// 	// 	// _, err = os.Stat(filePath)
+// 	// }
 
-	InitDB()
-}
+// 	InitDB()
+// }
 
 func InitDB() {
 	dataSource := viper.GetViper().GetStringMap("db")

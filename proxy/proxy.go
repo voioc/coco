@@ -42,7 +42,7 @@ func getClinet() *http.Client {
 
 				},
 				MaxIdleConnsPerHost:   10,
-				ResponseHeaderTimeout: time.Second * 2, // 限制读取response header的时间
+				ResponseHeaderTimeout: time.Second * 5, // 限制读取response header的时间
 			},
 			Timeout: 5 * time.Second, // 从连接(Dial)到读完response body 的时间
 		}
@@ -70,7 +70,7 @@ type HttpModel struct {
 	Method     string
 	URL        string
 	Header     map[string]string
-	Postdata   map[string]string
+	Params     map[string]string
 	HTTPUniqid string
 	Response   HttpResponse
 }
@@ -81,7 +81,7 @@ type Result struct {
 	Err  error
 }
 
-func SampleClient(urls string, method string, header map[string]string, postdata interface{}) (*HttpResponse, error) {
+func SimpleClient(urls string, method string, header map[string]string, params interface{}) (*HttpResponse, error) {
 	// Service.Flagtime("1")
 	var pbody io.Reader
 	req, err := http.NewRequest(method, urls, nil)
@@ -89,9 +89,9 @@ func SampleClient(urls string, method string, header map[string]string, postdata
 		return nil, err
 	}
 
-	if postdata != nil {
+	if params != nil {
 		if strings.ToUpper(method) == "GET" {
-			if post, ok := postdata.(map[string]string); ok {
+			if post, ok := params.(map[string]string); ok {
 				q := req.URL.Query()
 				for k, v := range post {
 					q.Add(k, v)
@@ -102,7 +102,7 @@ func SampleClient(urls string, method string, header map[string]string, postdata
 			// Common.SetDebug(fmt.Sprintf("Send HTTP Query: %s", urls+"?"+req.URL.RawQuery), 2)
 
 		} else if strings.ToUpper(method) == "POST" {
-			if post, ok := postdata.(map[string]string); ok {
+			if post, ok := params.(map[string]string); ok {
 				data := make(url.Values)
 				for k, v := range post {
 					data.Add(k, string(v))
@@ -110,7 +110,7 @@ func SampleClient(urls string, method string, header map[string]string, postdata
 				pbody = strings.NewReader(data.Encode())
 			}
 
-			if post, ok := postdata.([]byte); ok {
+			if post, ok := params.([]byte); ok {
 				pbody = bytes.NewReader(post)
 			}
 
@@ -216,7 +216,7 @@ func (m *Multiple) httpQuery(request HttpModel) ([]byte, error) {
 	// 		// Common.SetDebug(fmt.Sprintf("Cache Miss: %s", cache_key), 2)
 	// 	}
 	// }
-	tmp, err := SampleClient(request.URL, request.Method, request.Header, request.Postdata)
+	tmp, err := SimpleClient(request.URL, request.Method, request.Header, request.Params)
 	return tmp.Body, err
 }
 
