@@ -12,10 +12,11 @@ package db
 import (
 	"fmt"
 	"log"
-	"os"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/arthurkiller/rollingwriter"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/spf13/viper"
 	"xorm.io/xorm"
@@ -121,15 +122,40 @@ func mysqlConnect(dbName string, conf DS) error {
 	engine.SetMaxIdleConns(25)
 	engine.SetMaxOpenConns(50)
 
+	path, logFile := "", ""
+	if pos := strings.LastIndex(conf.Log, "/"); pos != -1 {
+		path = conf.Log[0:pos]
+		logFile = conf.Log[pos+1 : len(conf.Log)-4] // 去除后缀名，组件自动加.log后缀名
+	}
+
 	env := viper.GetString("env")
-	if env == "release" {
-		logWriter, err := os.OpenFile(conf.Log, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-		if err != nil {
-			log.Println("打开数据库日志文件失败:", err.Error())
-			return err
+	if env == "release" && path != "" && logFile != "" {
+		config := rollingwriter.Config{
+			LogPath:                path,                        //日志路径
+			TimeTagFormat:          "060102150405",              //时间格式串
+			FileName:               logFile,                     // 日志文件名
+			MaxRemain:              3,                           // 配置日志最大存留数
+			RollingPolicy:          rollingwriter.VolumeRolling, // 配置滚动策略 norolling timerolling volumerolling
+			RollingTimePattern:     "* * * * * *",               // 配置时间滚动策略
+			RollingVolumeSize:      "2G",                        // 配置截断文件上限大小
+			WriterMode:             "none",
+			BufferWriterThershould: 256,
+			// Compress will compress log file with gzip
+			Compress: true,
 		}
 
-		logger := xlog.NewSimpleLogger(logWriter)
+		writer, err := rollingwriter.NewWriterFromConfig(&config)
+		if err != nil {
+			log.Println(err.Error())
+		}
+
+		// logWriter, err := os.OpenFile(conf.Log, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		// if err != nil {
+		// 	log.Println("打开数据库日志文件失败:", err.Error())
+		// 	return err
+		// }
+
+		logger := xlog.NewSimpleLogger(writer)
 		engine.SetLogger(logger)
 	} else {
 		engine.ShowSQL(true)
