@@ -3,8 +3,6 @@ package logzap
 import (
 	"context"
 	"fmt"
-	"os"
-	"strings"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/spf13/viper"
@@ -36,13 +34,14 @@ func InitZap(name string) {
 	}
 
 	if logConf.Filename == "" {
-		logPath := "/log/"
-		env := strings.ToLower(os.Getenv("envType"))
-		if env != "product" && env != "test" && env != "gray" {
-			logPath = "runtime/"
-		}
+		// logPath := "/log/"
+		// env := strings.ToLower(os.Getenv("envType"))
+		// if env != "product" && env != "test" && env != "gray" {
+		// 	logPath = "runtime/"
+		// }
 
-		logPath = fmt.Sprintf("%s/%s.log", logPath, name)
+		// logPath = fmt.Sprintf("%s", name)
+		logPath := name
 
 		if closed := viper.GetBool("log.closed"); closed {
 			logPath = "/dev/null"
