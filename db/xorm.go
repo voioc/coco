@@ -157,9 +157,9 @@ func mysqlConnect(dbName string, conf DS) error {
 
 		logger := xlog.NewSimpleLogger(writer)
 		engine.SetLogger(logger)
-	} else {
-		engine.ShowSQL(true)
 	}
+
+	engine.ShowSQL(true)
 
 	if dbList == nil {
 		dbList = make(map[string]*xorm.EngineGroup, 0)
