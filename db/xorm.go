@@ -128,8 +128,8 @@ func mysqlConnect(dbName string, conf DS) error {
 		logFile = conf.Log[pos+1 : len(conf.Log)-4] // 去除后缀名，组件自动加.log后缀名
 	}
 
-	env := viper.GetString("env")
-	if env == "release" && path != "" && logFile != "" {
+	// env := viper.GetString("env")
+	if path != "" && logFile != "" {
 		config := rollingwriter.Config{
 			LogPath:                path,                        //日志路径
 			TimeTagFormat:          "060102150405",              //时间格式串
