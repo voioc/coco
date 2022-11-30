@@ -33,6 +33,10 @@ func InitZap(name string) {
 		logConf = &Logger{}
 	}
 
+	if name == "" {
+		name = viper.GetString("log.access")
+	}
+
 	if logConf.Filename == "" {
 		// logPath := "/log/"
 		// env := strings.ToLower(os.Getenv("envType"))
