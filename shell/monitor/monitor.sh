@@ -14,6 +14,10 @@ function getSingleProcessStats()
         else
             echo "[$LOG_TIME][$1] RESTART SERVICE FAILED"
         fi
+        sleep 5
+        if [ $CMD -eq 0 ];then
+            curl 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=1e6c5809-54ed-4566-abaf-53835b7748ff' -H 'Content-Type: application/json' -d '{"msgtype": "text","text": {"content": "'$1' restart failed"}}'
+        fi
     fi
 }
 if [ $# -ne 2 ]; then
