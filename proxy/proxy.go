@@ -32,7 +32,8 @@ func getClinet() *http.Client {
 	if client == nil {
 		client = &http.Client{
 			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // 信任所有证书
+				TLSClientConfig:   &tls.Config{InsecureSkipVerify: true}, // 信任所有证书
+				DisableKeepAlives: true,
 				Dial: func(netw, addr string) (net.Conn, error) {
 					c, err := net.DialTimeout(netw, addr, time.Second*2) // 限制建立TCP连接的时间
 					if err != nil {
