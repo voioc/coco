@@ -33,7 +33,7 @@ type DS struct {
 var dbList map[string]*xorm.EngineGroup
 
 // var engine *xorm.EngineGroup
-var lockMysql sync.Mutex
+var lock sync.Mutex
 
 // func init() {
 // 	// until := time.Now().Add(time.Second)
@@ -83,7 +83,7 @@ func GetDB(dn ...string) *xorm.EngineGroup {
 		InitDB()
 	}
 
-	if len(dn) < 1 {
+	if len(dn) < 1 && dbList["main"] != nil {
 		return dbList["main"]
 	}
 
@@ -91,8 +91,8 @@ func GetDB(dn ...string) *xorm.EngineGroup {
 }
 
 func dbConnect(dbName string, conf DS) error {
-	lockMysql.Lock()
-	defer lockMysql.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 
 	if _, ok := dbList[dbName]; ok {
 		if dbList[dbName] != nil {
