@@ -65,7 +65,7 @@ func InitDB() {
 
 		// 数据库初始化
 		if ds.Driver == "mysql" {
-			if err := mysqlConnect(row, ds); err != nil {
+			if err := dbConnect(row, ds); err != nil {
 				log.Printf("%s, db: %s\n", err.Error(), row)
 				continue
 			}
@@ -78,7 +78,7 @@ func InitDB() {
 }
 
 // GetDB 获取指定数据库连接资源 dn->dbname
-func GetMySQL(dn ...string) *xorm.EngineGroup {
+func GetDB(dn ...string) *xorm.EngineGroup {
 	if len(dbList) < 1 {
 		InitDB()
 	}
@@ -90,7 +90,7 @@ func GetMySQL(dn ...string) *xorm.EngineGroup {
 	return dbList[dn[1]]
 }
 
-func mysqlConnect(dbName string, conf DS) error {
+func dbConnect(dbName string, conf DS) error {
 	lockMysql.Lock()
 	defer lockMysql.Unlock()
 
