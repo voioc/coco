@@ -28,7 +28,7 @@ func NewProxy(c *gin.Context) ProxyClient {
 //定义并初始化客户端变量
 var client *http.Client
 
-func getClinet() *http.Client {
+func getClient() *http.Client {
 	if client == nil {
 		client = &http.Client{
 			Transport: &http.Transport{
@@ -132,7 +132,7 @@ func SimpleClient(urls string, method string, header map[string]string, params i
 	}
 
 	httpRes := NewResponse()
-	client := getClinet()
+	client := getClient()
 	resp, err := client.Do(req)
 	if err != nil {
 		// Common.SetDebug(fmt.Sprintf("HTTP Query Downgrade: %s", err.Error()), 2)
