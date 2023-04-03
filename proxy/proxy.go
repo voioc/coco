@@ -35,7 +35,7 @@ func getClient() *http.Client {
 				TLSClientConfig:   &tls.Config{InsecureSkipVerify: true}, // 信任所有证书
 				DisableKeepAlives: true,
 				Dial: func(netw, addr string) (net.Conn, error) {
-					c, err := net.DialTimeout(netw, addr, time.Second*2) // 限制建立TCP连接的时间
+					c, err := net.DialTimeout(netw, addr, time.Second*5) // 限制建立TCP连接的时间
 					if err != nil {
 						return nil, err
 					}
@@ -43,9 +43,9 @@ func getClient() *http.Client {
 
 				},
 				MaxIdleConnsPerHost:   10,
-				ResponseHeaderTimeout: time.Second * 5, // 限制读取response header的时间
+				ResponseHeaderTimeout: time.Second * 10, // 限制读取response header的时间
 			},
-			Timeout: 5 * time.Second, // 从连接(Dial)到读完response body 的时间
+			Timeout: 10 * time.Second, // 从连接(Dial)到读完response body 的时间
 		}
 	}
 
