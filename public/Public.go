@@ -145,7 +145,7 @@ func TrimHTML(src string) string {
 func FilePutContents(file string, content interface{}, isShowTime bool) {
 	f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		logzap.Ex(context.Background(), "FilePutContents", "file: %s | error: %s", file, err.Error())
+		logzap.Dx(context.Background(), "FilePutContents", "file: %s | error: %s", file, err.Error())
 	}
 
 	c := ""
@@ -161,7 +161,7 @@ func FilePutContents(file string, content interface{}, isShowTime bool) {
 	}
 
 	if _, err := f.WriteString(c + "\n"); err != nil {
-		logzap.Ex(context.Background(), "FilePutContents", "file: %s | error: %s", file, err.Error())
+		logzap.Dx(context.Background(), "FilePutContents", "file: %s | error: %s", file, err.Error())
 	}
 }
 
