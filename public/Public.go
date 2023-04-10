@@ -1,6 +1,7 @@
 package public
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -16,6 +17,7 @@ import (
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
+	"github.com/voioc/coco/logzap"
 )
 
 func InSlice(obj interface{}, target []string) bool {
@@ -141,7 +143,10 @@ func TrimHTML(src string) string {
 
 // FilePutContents 写入文件信息
 func FilePutContents(file string, content interface{}, isShowTime bool) {
-	f, _ := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		logzap.Ex(context.Background(), "FilePutContents", "file: %s | error: %s", file, err.Error())
+	}
 
 	c := ""
 	if v, ok := content.([]byte); ok {
@@ -155,7 +160,9 @@ func FilePutContents(file string, content interface{}, isShowTime bool) {
 		c = now + c
 	}
 
-	f.WriteString(c + "\n")
+	if _, err := f.WriteString(c + "\n"); err != nil {
+		logzap.Ex(context.Background(), "FilePutContents", "file: %s | error: %s", file, err.Error())
+	}
 }
 
 // float 类型精度问题
