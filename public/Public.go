@@ -123,6 +123,8 @@ func GetRoot() string {
 
 // TrimHTML 清除html标签
 func TrimHTML(src string) string {
+	src = strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(src, "&nbsp;", ""), "\r\n", ""), " ", "")
+
 	//将HTML标签全转换成小写
 	re, _ := regexp.Compile(`\\<[\\S\\s]+?\\>`)
 	src = re.ReplaceAllStringFunc(src, strings.ToLower)
@@ -138,6 +140,10 @@ func TrimHTML(src string) string {
 	//去除连续的换行符
 	re, _ = regexp.Compile(`\\s{2,}`)
 	src = re.ReplaceAllString(src, "\n")
+
+	//去除<p>
+	re, _ = regexp.Compile(`<.*?>`)
+	src = re.ReplaceAllString(src, "")
 	return strings.TrimSpace(src)
 }
 
