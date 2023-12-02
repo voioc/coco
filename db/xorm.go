@@ -87,7 +87,7 @@ func GetDB(dn ...string) *xorm.EngineGroup {
 		return dbList["main"]
 	}
 
-	return dbList[dn[1]]
+	return dbList[dn[0]]
 }
 
 func dbConnect(dbName string, conf DS) error {
